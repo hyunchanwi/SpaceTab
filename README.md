@@ -26,3 +26,8 @@ Those backups stay on the Mac; they are never uploaded here.
 
 Scheduled runs do no macOS build when neither source nor engine has changed. Failed
 maintenance is visible in Actions and a single maintenance-attention issue.
+
+GitHub can disable public scheduled workflows after 60 days without repository activity.
+If that happens, the owner can re-enable **Browser maintenance** in Actions; manual workflow
+dispatch remains available. This controller does not add repository-write permissions to a
+status job or make artificial activity commits.
