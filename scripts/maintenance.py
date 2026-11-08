@@ -43,7 +43,7 @@ def choose_engine(current, desired, releases):
     """Only official codec-enabled, checksummed arm64 binaries may be shipped."""
     options = [current]
     for candidate in desired:
-        if version(candidate) <= version(current["version"]):
+        if version(candidate) < version(current["version"]):
             continue
         base = candidate.split("+", 1)[0]
         for release in releases:
@@ -55,7 +55,10 @@ def choose_engine(current, desired, releases):
                 prefix = f'https://github.com/{CONFIG["upstreamRepository"]}/releases/download/{release["tag_name"]}/'
                 if asset["name"] == "cef_binary_macosarm64_minimal.tar.bz2" and re.fullmatch(r"sha256:[a-f0-9]{64}", digest) and url.startswith(prefix):
                     options.append({"version": candidate, "url": url, "sha256": digest[7:]})
-    return max(options, key=lambda e: (version(e["version"]), e["url"]))
+    def rank(engine):
+        codec = re.search(r"-codecs([0-9]+)/", engine["url"])
+        return version(engine["version"]), int(codec[1]) if codec else 0
+    return max(options, key=rank)
 
 
 def integrate(root, upstream_sha):

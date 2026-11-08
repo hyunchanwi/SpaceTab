@@ -36,6 +36,15 @@ class MaintenanceTests(unittest.TestCase):
         self.assertEqual(maintenance.choose_engine(current, ["156.0.15+gabc+chromium-156.0.8078.80"], []), current)
         self.assertGreater(maintenance.version("157.0.1+gabc+chromium-157.0.1.1"), maintenance.version(current["version"]))
 
+    def test_new_patched_binary_for_same_engine_version_is_not_missed(self):
+        v = "156.0.26+gabc+chromium-156.0.8078.88"
+        prefix = "https://github.com/VictorKildahl/cra/releases/download/"
+        old = {"version": v, "url": prefix + "cef-156.0.26-codecs2/cef_binary_macosarm64_minimal.tar.bz2", "sha256": "a" * 64}
+        releases = [{"tag_name": "cef-156.0.26-codecs" + str(n), "assets": [{"name": "cef_binary_macosarm64_minimal.tar.bz2",
+            "browser_download_url": prefix + "cef-156.0.26-codecs" + str(n) + "/cef_binary_macosarm64_minimal.tar.bz2",
+            "digest": "sha256:" + "b" * 64}]} for n in [3, 10, 9]]
+        self.assertIn("-codecs10/", maintenance.choose_engine(old, [v], releases)["url"])
+
     def test_source_conflict_aborts_and_keeps_personal_changes(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
