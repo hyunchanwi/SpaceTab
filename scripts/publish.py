@@ -44,7 +44,10 @@ def write_feed(archive, plan, info, signature):
     for key, value in [("version", plan["build"]), ("shortVersionString", plan["version"]),
                        ("minimumSystemVersion", info["LSMinimumSystemVersion"])]:
         ET.SubElement(item, "{" + SPARKLE + "}" + key).text = value
-    ET.SubElement(item, "description").text = "Tested browser and Chromium/CEF maintenance update."
+    notes = "Tested browser and Chromium/CEF maintenance update."
+    if plan.get("engineBuildNeeded"):
+        notes += " A newer stable engine is awaiting a compatible patched binary; this update does not include that newer engine."
+    ET.SubElement(item, "description").text = notes
     ET.SubElement(item, "enclosure", {
         "url": f'https://github.com/{CONFIG["distributionRepository"]}/releases/download/v{plan["version"]}/Arc-Workshop.zip',
         "type": "application/octet-stream", "length": str(archive.stat().st_size),

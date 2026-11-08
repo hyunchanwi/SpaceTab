@@ -20,6 +20,23 @@ maintenance, publish = module("maintenance"), module("publish")
 
 
 class MaintenanceTests(unittest.TestCase):
+    def test_personal_code_changes_trigger_builds_but_docs_and_release_records_do_not(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            def stage():
+                subprocess.run(["git", "-C", temp, "add", "."], check=True, capture_output=True)
+            subprocess.run(["git", "init", temp], check=True, capture_output=True)
+            (root / "code.swift").write_text("first")
+            (root / "README.md").write_text("first")
+            (root / "workshop").mkdir()
+            (root / "workshop/last-release.json").write_text("{}")
+            stage(); first = maintenance.source_fingerprint(root)
+            (root / "README.md").write_text("changed docs")
+            (root / "workshop/last-release.json").write_text('{"version":"1.0.2"}')
+            stage(); self.assertEqual(maintenance.source_fingerprint(root), first)
+            (root / "code.swift").write_text("new personal feature")
+            stage(); self.assertNotEqual(maintenance.source_fingerprint(root), first)
+
     def test_missing_or_unverified_engine_never_replaces_working_engine(self):
         old = {"version": "156.0.26+gabc+chromium-156.0.8078.88", "url": "old", "sha256": "a" * 64}
         new = "157.0.1+gdef+chromium-157.0.8103.39"

@@ -2,6 +2,7 @@
 """Trusted controller: integrates upstream without executing private source code."""
 import argparse
 import datetime
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -73,6 +74,20 @@ def integrate(root, upstream_sha):
     return True
 
 
+def source_fingerprint(root):
+    # The release record cannot hash itself. Docs and disabled private CI don't change the app.
+    rows = git(root, "ls-files", "-s", "-z").stdout.split("\0")
+    code = []
+    for row in rows:
+        if not row:
+            continue
+        _, path = row.split("\t", 1)
+        if path == "workshop/last-release.json" or path.endswith(".md") or path.startswith(("docs/", ".github/")):
+            continue
+        code.append(row)
+    return hashlib.sha256("\0".join(sorted(code)).encode()).hexdigest()
+
+
 def prepare(root, run, force):
     if not re.fullmatch(r"[0-9]+", run):
         raise ValueError("Invalid run number")
@@ -97,6 +112,9 @@ def prepare(root, run, force):
     releases = get_json(f"https://api.github.com/repos/{repo}/releases?per_page=100")
     engine = choose_engine(current, [match[1], latest], releases)
     waiting = version(latest) > version(engine["version"])
+    (root / "workshop/engine.json").write_text(json.dumps(engine, indent=2) + "\n")
+    git(root, "add", "workshop/engine.json")
+    fingerprint = source_fingerprint(root)
     try:
         published = get_json(f'https://api.github.com/repos/{CONFIG["distributionRepository"]}/releases/latest')["tag_name"]
     except urllib.error.HTTPError as error:
@@ -106,14 +124,15 @@ def prepare(root, run, force):
     previous_file = root / "workshop/last-release.json"
     previous = json.loads(previous_file.read_text()) if previous_file.exists() else {}
     unpublished = not published or published != "v" + previous.get("version", "")
-    changed = merged or engine != current or unpublished
+    changed = merged or engine != current or unpublished or fingerprint != previous.get("sourceFingerprint")
     plan = {"changed": changed or force, "base": base, "upstream": upstream,
             "engine": engine, "latestStableEngine": latest, "engineBuildNeeded": waiting,
+            "sourceFingerprint": fingerprint,
             "version": "1.0." + run, "build": datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%d%H%M%S"),
             "branch": "maintenance/candidate-" + run}
     if plan["changed"]:
         (root / "workshop/engine.json").write_text(json.dumps(engine, indent=2) + "\n")
-        state = {k: plan[k] for k in ["upstream", "engine", "version", "build"]}
+        state = {k: plan[k] for k in ["upstream", "engine", "version", "build", "sourceFingerprint"]}
         (root / "workshop/last-release.json").write_text(json.dumps(state, indent=2) + "\n")
         git(root, "add", "workshop")
         git(root, "commit", "--allow-empty", "-m", "Prepare Arc Workshop " + plan["version"])
