@@ -1,0 +1,155 @@
+name: Browser maintenance
+
+on:
+  schedule:
+    - cron: '19 */6 * * *'
+  workflow_dispatch:
+    inputs:
+      force:
+        description: Build even if upstream has not changed
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: workshop-maintenance
+  cancel-in-progress: false
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      changed: ${{ steps.plan.outputs.changed }}
+      base: ${{ steps.plan.outputs.base }}
+      candidate: ${{ steps.plan.outputs.candidate }}
+      version: ${{ steps.plan.outputs.version }}
+      build: ${{ steps.plan.outputs.build }}
+      engineBuildNeeded: ${{ steps.plan.outputs.engineBuildNeeded }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Controller regression tests
+        run: python3 scripts/test_maintenance.py
+      - name: Plan source and engine update
+        id: plan
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SOURCE_DEPLOY_KEY: ${{ secrets.SOURCE_DEPLOY_KEY }}
+          RUN_NUMBER: ${{ github.run_number }}
+          FORCE: ${{ github.event_name == 'workflow_dispatch' && inputs.force && '1' || '' }}
+        run: bash scripts/source.sh plan "$RUNNER_TEMP/source"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: maintenance-plan
+          path: plan.json
+          retention-days: 3
+
+  build:
+    needs: plan
+    if: needs.plan.outputs.changed == 'true'
+    runs-on: macos-26
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Fetch candidate source and discard its credential
+        env:
+          SOURCE_DEPLOY_KEY: ${{ secrets.SOURCE_DEPLOY_KEY }}
+          CANDIDATE: ${{ needs.plan.outputs.candidate }}
+        run: bash scripts/source.sh checkout "$RUNNER_TEMP/source"
+      - name: Select Xcode
+        run: |
+          XCODE=$(find /Applications -maxdepth 1 -name 'Xcode_27*.app' | sort | tail -1)
+          if [ -n "$XCODE" ]; then sudo xcode-select -s "$XCODE/Contents/Developer"; fi
+          xcodebuild -version
+      - name: Tests, release build and isolated launch/restore check
+        env:
+          VERSION: ${{ needs.plan.outputs.version }}
+          BUILD: ${{ needs.plan.outputs.build }}
+        run: bash scripts/build.sh "$RUNNER_TEMP/source"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: tested-browser
+          path: dist/Arc-Workshop.zip
+          compression-level: 0
+          retention-days: 3
+
+  publish:
+    needs: [plan, build]
+    runs-on: macos-26
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333
+        with:
+          name: maintenance-plan
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333
+        with:
+          name: tested-browser
+          path: dist
+      - name: Fetch pinned signature tool
+        run: |
+          curl -fL --retry 3 -o "$RUNNER_TEMP/sparkle.tar.xz" https://github.com/sparkle-project/Sparkle/releases/download/2.10.0/Sparkle-2.10.0.tar.xz
+          echo "c2bf58aa8387266ac179357b1415d6f2635f044da8be41042af32425dae6da0c  $RUNNER_TEMP/sparkle.tar.xz" | shasum -a 256 -c -
+          mkdir "$RUNNER_TEMP/sparkle"
+          tar -xJf "$RUNNER_TEMP/sparkle.tar.xz" -C "$RUNNER_TEMP/sparkle"
+      - name: Validate archive and sign archive/feed
+        env:
+          SPARKLE_PRIVATE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}
+        run: python3 scripts/publish.py dist/Arc-Workshop.zip plan.json --sign-tool "$RUNNER_TEMP/sparkle/bin/sign_update"
+      - name: Upload draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.plan.outputs.version }}
+        run: |
+          printf '%s\n' "Arc Workshop $VERSION. Automated browser tests and isolated launch/restore checks passed. Personal build; not Apple notarized." > "$RUNNER_TEMP/notes.md"
+          gh release create "v$VERSION" dist/* --draft --target main --title "Arc Workshop $VERSION" --notes-file "$RUNNER_TEMP/notes.md"
+      - name: Promote tested source
+        env:
+          SOURCE_DEPLOY_KEY: ${{ secrets.SOURCE_DEPLOY_KEY }}
+          CANDIDATE: ${{ needs.plan.outputs.candidate }}
+          BASE: ${{ needs.plan.outputs.base }}
+        run: bash scripts/source.sh promote "$RUNNER_TEMP/source"
+      - name: Publish update
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.plan.outputs.version }}
+        run: gh release edit "v$VERSION" --draft=false --latest
+
+  attention:
+    needs: [plan, build, publish]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Report maintenance status
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PLAN_RESULT: ${{ needs.plan.result }}
+          BUILD_RESULT: ${{ needs.build.result }}
+          PUBLISH_RESULT: ${{ needs.publish.result }}
+          ENGINE_WAITING: ${{ needs.plan.outputs.engineBuildNeeded }}
+          RUN_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          ISSUE=$(gh issue list --state open --search '"Maintenance needs attention" in:title' --json number --jq '.[0].number')
+          if [ "$PLAN_RESULT" != success ] || [ "$BUILD_RESULT" = failure ] || [ "$PUBLISH_RESULT" = failure ] || [ "$ENGINE_WAITING" = true ]; then
+            printf '%s\n' "Automated maintenance requires attention." "" "Plan: $PLAN_RESULT; build: $BUILD_RESULT; publish: $PUBLISH_RESULT." "A newer stable engine needs a patched binary: $ENGINE_WAITING." "" "$RUN_URL" > "$RUNNER_TEMP/attention.md"
+            if [ -n "$ISSUE" ]; then gh issue edit "$ISSUE" --body-file "$RUNNER_TEMP/attention.md"; else gh issue create --title 'Maintenance needs attention' --body-file "$RUNNER_TEMP/attention.md"; fi
+          elif [ -n "$ISSUE" ]; then
+            gh issue close "$ISSUE"
+          fi
