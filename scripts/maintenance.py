@@ -35,7 +35,7 @@ def git(root, *args, allow_failure=False):
     result = subprocess.run(command, text=True, capture_output=True)
     if result.returncode and not allow_failure:
         # Compiler/merge output may contain private source text. Never copy it to public logs.
-        raise RuntimeError("Source integration failed; no release will be published")
+        raise RuntimeError("Source integration failed at git " + args[0] + "; no release will be published")
     return result
 
 
@@ -139,5 +139,6 @@ if __name__ == "__main__":
     try:
         main()
     except Exception as error:
-        print(type(error).__name__ + ": maintenance stopped before publication", file=sys.stderr)
+        detail = str(error) if isinstance(error, (RuntimeError, ValueError, urllib.error.HTTPError)) else "maintenance stopped before publication"
+        print(type(error).__name__ + ": " + detail, file=sys.stderr)
         sys.exit(1)
