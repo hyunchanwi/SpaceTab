@@ -6,7 +6,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/hyunchanwi/arc-workshop-updates/releases/latest"><strong>Download for Mac</strong></a> ·
+  <a href="https://github.com/hyunchanwi/arc-workshop-updates/releases/latest/download/Arc-Workshop.zip"><strong>Download for Mac</strong></a> ·
   <a href="README.ko.md">한국어</a> ·
   <a href="docs/guide.md">User guide</a> ·
   <a href="https://github.com/hyunchanwi/arc-workshop-updates/releases">Release notes</a> ·
@@ -32,6 +32,18 @@ storage folder and signed update feed.
 contains public downloads, documentation and maintenance tooling. Arc Workshop is an
 independent project and is not affiliated with Arc, Dia or The Browser Company.
 
+## Keep the page. Change the space.
+
+Open a favorite video in **Work**, switch to **Play**, and choose the same favorite.
+You return to the same live page. Your pinned Work tabs stay in Work; your shared favorites
+come along. That distinction is the heart of Arc Workshop.
+
+Try it in a minute:
+
+1. **Make room for each context.** Create Work, Play and Study spaces; switch with `⌃1`–`⌃9`.
+2. **Keep a few sites close.** Add a favorite for the sites you use everywhere; pin the rest to their own space.
+3. **Let the page take over.** Press `⌘S` to hide the sidebar. Bring it back when you need your tabs.
+
 ## What it does
 
 | Feature | How it works |
@@ -48,7 +60,9 @@ independent project and is not affiliated with Arc, Dia or The Browser Company.
 
 Trackpad space gestures and edge reveal depend on settings and input hardware. Automated
 behavior checks exist; every hardware combination has not been tested. This is not a claim
-of complete Arc feature parity. Easels, Boosts and Arc's cloud services are not provided.
+of complete Arc feature parity. Local Easel and Boost tools are present in the current code,
+but their full Arc workflows have not been verified here. Arc's cloud sharing, gallery and
+account services are not provided.
 
 ## Install
 
@@ -72,27 +86,25 @@ encryption key. Enter your Mac password only in the macOS dialog. Moving from an
 build to the persistent identity may require approval once. A locked Keychain, certificate
 change or access-policy change can still cause a later prompt.
 
-## A quick start
+## Useful keys
 
-- Create a space for each context, such as Work, Play and Study.
-- Put sites you want everywhere in **Favorites**. Pin sites that belong to one space below it.
-- Use `⌘T` for the command bar, `⌘L` for the address, `⌘S` for the sidebar and `⌃1`–`⌃9` for spaces.
-- Use `⌘⇧T` to restore a closed tab. Closing a window and quitting the app are different actions.
-- Use the application menu's update command to check manually.
+| Shortcut | Action |
+| --- | --- |
+| `⌘T` / `⌘L` | Open the command bar / edit the address |
+| `⌘S` | Show or hide the sidebar |
+| `⌃1`–`⌃9` | Switch spaces |
+| `⌘D` | Pin or unpin a tab |
+| `⌘⇧T` | Restore a closed tab |
 
-The [user guide](docs/guide.md) explains favorites, login profiles, Tidy Tabs and recovery.
+The [user guide](docs/guide.md) covers login profiles, Tidy Tabs and recovery.
 
 ## How updates work
 
 ```mermaid
 flowchart LR
-    A[Check upstream and engine] --> B[Integrate and test]
-    B --> C[Build and test launch/restore]
-    C --> D[Sign app with persistent identity]
-    D --> E[Sign archive and update feed]
-    E --> F[Publish GitHub release]
-    F --> G[App verifies and offers update]
-    G --> H[Save local snapshot and install]
+    A[Signed release] --> B[App verifies and offers update]
+    B --> C[Save local recovery copy]
+    C --> D[Install and reopen]
 ```
 
 Maintenance checks roughly every six hours; installed copies check about every eight hours.
@@ -109,6 +121,43 @@ Application code signing and Sparkle's update signatures are separate checks. Bu
 without application/update signing credentials; a separate publishing job signs artifacts
 without executing the browser. See [update architecture](docs/updates.md) and the
 [maintainer signing guide](docs/signing.md).
+
+## Questions before you try it
+
+<details>
+<summary>Is the app called Cra or Arc Workshop?</summary>
+
+The app distributed here is **Arc Workshop**. **Cra** is its upstream foundation and receives
+credit in the app and license notices. This is an independent fork with its own update channel.
+
+</details>
+
+<details>
+<summary>Do spaces give me separate logins?</summary>
+
+Use separate **profiles** for separate accounts. Spaces organize tabs. Spaces using the same
+profile share site login storage and, when enabled, favorites.
+
+</details>
+
+<details>
+<summary>Does normal browsing depend on Arc being installed?</summary>
+
+No. Arc Workshop has its own Chromium/CEF engine and local browsing profile. Importing Arc
+data needs the data to be available locally; normal browsing uses Arc Workshop's own engine.
+Arc's cloud services are not part of this app.
+
+</details>
+
+<details>
+<summary>Will an update ask for my Mac password every time?</summary>
+
+That is not an intended update step. A persistent certificate keeps the app's signing
+identity stable. The first transition from an ad-hoc build can need Keychain approval,
+and a locked Keychain or changed certificate can still prompt. Personal signing does not
+provide Apple notarization.
+
+</details>
 
 ## Your data
 

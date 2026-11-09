@@ -13,5 +13,7 @@ uses fictional content and contains no user browsing information.
 
 The public README organization was informed by the upstream
 [Cra](https://github.com/VictorKildahl/cra), [Helium](https://github.com/imputnet/helium) and
-[Zen](https://github.com/zen-browser/desktop) project pages. Descriptions and artwork here
-were written for Arc Workshop.
+[Zen](https://github.com/zen-browser/desktop), [Min](https://github.com/minbrowser/min),
+[Ladybird](https://github.com/LadybirdBrowser/ladybird) and
+[Rectangle](https://github.com/rxhanson/Rectangle) project pages. Descriptions and artwork
+here were written for Arc Workshop. See the [dated presentation notes](docs/presentation-notes.md).

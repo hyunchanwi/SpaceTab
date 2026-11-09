@@ -2,7 +2,7 @@
 
 **스페이스를 오가던 익숙한 흐름을 이어가는 macOS 브라우저.**
 
-[Mac용 다운로드](https://github.com/hyunchanwi/arc-workshop-updates/releases/latest) ·
+[Mac용 다운로드](https://github.com/hyunchanwi/arc-workshop-updates/releases/latest/download/Arc-Workshop.zip) ·
 [English](README.md) · [사용 안내](docs/guide.md) ·
 [릴리스 기록](https://github.com/hyunchanwi/arc-workshop-updates/releases) ·
 [문제 제보](https://github.com/hyunchanwi/arc-workshop-updates/issues/new/choose)
@@ -18,6 +18,18 @@ Chromium/CEF 엔진을 사용하며, 자체 저장 공간과 업데이트 경로
 **앱 소스는 비공개**이고, 이 저장소에는 설치 파일·설명서·유지보수 도구가 공개되어 있습니다.
 Arc·Dia·The Browser Company와 관계없는 독립 프로젝트입니다. Arc 전체 기능을
 완벽히 재현한 제품이라는 뜻은 아닙니다.
+
+## 스페이스를 바꿔도, 보던 페이지는 그대로
+
+**Work**에서 즐겨찾기의 영상을 보다가 **Play**로 옮겨 같은 즐겨찾기를 누르면,
+보던 실제 페이지로 돌아옵니다. Work에 고정한 탭은 Work에 남고, 공통으로 쓰는
+즐겨찾기는 함께 따라옵니다. Arc Workshop에서 가장 중요하게 다루는 흐름입니다.
+
+처음 1분은 이렇게 시작하세요.
+
+1. **맥락마다 공간 만들기.** Work·Play·Study 스페이스를 만들고 `⌃1`–`⌃9`로 오갑니다.
+2. **자주 쓰는 사이트 가까이 두기.** 어디서나 쓸 사이트는 즐겨찾기에, 그 공간에만 둘 사이트는 고정 탭에 둡니다.
+3. **페이지에 집중하기.** `⌘S`로 사이드바를 숨겼다가 탭이 필요할 때 다시 펼칩니다.
 
 ## 주요 기능
 
@@ -35,7 +47,8 @@ Arc·Dia·The Browser Company와 관계없는 독립 프로젝트입니다. Arc 
 
 트랙패드 스페이스 제스처와 가장자리 펼치기는 설정·입력 장치에 영향을 받습니다.
 자동 동작 검증은 있지만 모든 하드웨어 조합에서 실사용 검증한 것은 아닙니다.
-Easels·Boosts·Arc의 클라우드 서비스는 제공하지 않습니다.
+현재 코드에는 로컬 Easel·Boost 도구가 있지만 Arc의 전체 사용 흐름을 여기서 실사용
+검증한 것은 아닙니다. Arc의 클라우드 공유·갤러리·계정 서비스는 제공하지 않습니다.
 
 ## 설치
 
@@ -73,6 +86,34 @@ Tidy Tabs는 별도 시스템 조건을 충족해야 합니다.
 **스페이스와 로그인 프로필은 다릅니다.** 서로 다른 계정으로 로그인하려면 프로필을
 나눠야 합니다. 공유 즐겨찾기도 같은 로그인 프로필 안에서만 이어집니다.
 자세한 설명과 복구 절차는 [사용 안내](docs/guide.md)에 있습니다.
+
+## 시작하기 전에 궁금한 점
+
+<details>
+<summary>앱 이름이 Cra인가요, Arc Workshop인가요?</summary>
+
+여기서 배포하는 앱 이름은 **Arc Workshop**입니다. **Cra**는 기반이 된 원본 프로젝트이며,
+앱과 라이선스 안내에 원작자를 표시합니다. 업데이트 경로도 Arc Workshop 전용입니다.
+
+</details>
+
+<details>
+<summary>Arc가 설치되어 있어야 사용할 수 있나요?</summary>
+
+일반적인 브라우징에는 필요하지 않습니다. 자체 Chromium/CEF 엔진과 로컬 프로필로
+작동합니다. Arc에서 가져오기를 하려면 가져올 로컬 데이터가 있어야 합니다.
+Arc의 클라우드 서비스가 함께 제공되는 것은 아닙니다.
+
+</details>
+
+<details>
+<summary>업데이트할 때마다 Mac 암호를 입력하나요?</summary>
+
+매번 입력하는 것이 의도된 업데이트 절차는 아닙니다. 같은 인증서로 서명해 앱 신원을
+유지합니다. 기존 임시 서명에서 바뀌는 첫 업데이트, 잠긴 키체인, 인증서 변경 등의
+상황에서는 승인을 다시 요청할 수 있습니다. 개인 인증서 서명은 Apple 공증과 다릅니다.
+
+</details>
 
 ## 업데이트는 어떻게 만들어지나요?
 
