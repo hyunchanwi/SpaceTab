@@ -133,6 +133,10 @@ Arc의 클라우드 서비스가 함께 제공되는 것은 아닙니다.
 
 ## 데이터와 공개 범위
 
+현재 Google Safe Browsing의 피싱·악성 사이트 경고는 제공하지 않습니다. 광고 차단과는
+별개의 보호 기능입니다. 엔진 보안 업데이트도 호환 바이너리 공급에 영향을 받습니다.
+현재 보안 범위와 검사 항목은 [SECURITY.md](SECURITY.md)에 정리합니다.
+
 브라우징 데이터는 `~/Library/Application Support/Arc Workshop`, 업데이트 전 복사본은
 `~/Library/Application Support/Arc Workshop Backups`에 보관합니다. 복사본에는 전체
 브라우징 프로필이 들어갈 수 있으므로 개인 데이터로 취급하세요. 자동으로 업로드하지 않습니다.

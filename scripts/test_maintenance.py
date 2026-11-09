@@ -20,6 +20,15 @@ maintenance, publish = module("maintenance"), module("publish")
 
 
 class MaintenanceTests(unittest.TestCase):
+    def test_chrome_lead_is_reported_even_when_cef_has_not_caught_up(self):
+        engine = "156.0.26+gabc+chromium-156.0.8078.88"
+        current = {"versions": [{"version": "156.0.8078.88"}]}
+        self.assertEqual(maintenance.engine_freshness(engine, engine, current), ("156.0.8078.88", False))
+        self.assertEqual(maintenance.engine_freshness(engine, engine, {"versions": [
+            {"version": "157.0.8103.39"}, {"version": "158.0.8127.18"}]}), ("158.0.8127.18", True))
+        self.assertEqual(maintenance.engine_freshness(engine, engine, {}), (None, True))
+        self.assertEqual(maintenance.engine_freshness(engine, engine, {"versions": [{"version": "not a version"}]}), (None, True))
+
     def test_personal_code_changes_trigger_builds_but_docs_and_release_records_do_not(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)

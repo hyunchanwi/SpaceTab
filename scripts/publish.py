@@ -5,11 +5,12 @@ import datetime
 import hashlib
 import json
 import os
-import posixpath
+from collections import deque
 from pathlib import Path
 import plistlib
 import subprocess
 import stat
+import unicodedata
 import xml.etree.ElementTree as ET
 import zipfile
 
@@ -18,30 +19,104 @@ CONFIG = json.loads((ROOT / "config.json").read_text())
 SPARKLE = "http://www.andymatuschak.org/xml-namespaces/sparkle"
 ET.register_namespace("sparkle", SPARKLE)
 
+# Bound parsing and extraction even before the signing identity is imported.
+APP_ROOT = "Arc Workshop.app"
+MAX_ARCHIVE_ENTRIES = 100_000
+MAX_EXPANDED_BYTES = 4 * 1024**3
+MAX_FILE_BYTES = 2 * 1024**3
+MAX_PLIST_BYTES = 1024**2
+MAX_LINK_BYTES = 4096
+
+
+def archive_key(path):
+    # The release is extracted on the default case-insensitive macOS filesystem.
+    return unicodedata.normalize("NFC", path).casefold()
+
+
+def validate_archive_paths(bundle):
+    entries = bundle.infolist()
+    if len(entries) > MAX_ARCHIVE_ENTRIES:
+        raise ValueError("Too many archive entries")
+    seen, links, files = {}, {}, set()
+    total = 0
+    for entry in entries:
+        name = entry.filename.rstrip("/")
+        parts = name.split("/")
+        if (not parts or parts[0] != APP_ROOT or len(parts) > 128
+                or any(p in ("", ".", "..") for p in parts)
+                or "\\" in name or "\x00" in entry.orig_filename
+                or entry.filename != name + ("/" if entry.is_dir() else "")):
+            raise ValueError("Unexpected release archive path")
+        key = archive_key(name)
+        if key in seen:
+            raise ValueError("Duplicate archive entry")
+        seen[key] = entry
+        mode = stat.S_IFMT(entry.external_attr >> 16)
+        if mode not in (0, stat.S_IFREG, stat.S_IFDIR, stat.S_IFLNK):
+            raise ValueError("Unsupported archive file type")
+        if entry.flag_bits & 1 or entry.compress_type not in (zipfile.ZIP_STORED, zipfile.ZIP_DEFLATED):
+            raise ValueError("Unsupported archive encoding")
+        total += entry.file_size
+        if entry.file_size > MAX_FILE_BYTES or total > MAX_EXPANDED_BYTES:
+            raise ValueError("Archive extraction size limit exceeded")
+        if mode == stat.S_IFLNK:
+            if entry.is_dir() or not 0 < entry.file_size <= MAX_LINK_BYTES:
+                raise ValueError("Invalid archive symlink")
+            target = bundle.read(entry).decode("utf-8")
+            if target.startswith("/") or "\x00" in target or "\\" in target:
+                raise ValueError("Invalid archive symlink target")
+            links[key] = target
+        elif not entry.is_dir() and mode != stat.S_IFDIR:
+            files.add(key)
+        if len(parts) == 1 and (mode == stat.S_IFLNK or key in files):
+            raise ValueError("Application root must be a directory")
+
+    # Never let extraction order or a filesystem alias redirect an entry's writes.
+    for key in seen:
+        parts = key.split("/")
+        for count in range(1, len(parts)):
+            ancestor = "/".join(parts[:count])
+            if ancestor in links or ancestor in files:
+                raise ValueError("Archive entry has a non-directory ancestor")
+
+    # Resolve all link components before '..', as the filesystem does. Lexical
+    # normpath alone incorrectly accepts chained links which leave the bundle.
+    for key, target in links.items():
+        stack = key.split("/")[:-1]
+        pending = deque(target.split("/"))
+        hops = 0
+        while pending:
+            component = pending.popleft()
+            if component in ("", "."):
+                continue
+            if component == "..":
+                if len(stack) <= 1:
+                    raise ValueError("Archive symlink escapes the application")
+                stack.pop()
+                continue
+            stack.append(component)
+            referenced = links.get(archive_key("/".join(stack)))
+            if referenced is not None:
+                hops += 1
+                if hops > 40:
+                    raise ValueError("Cyclic or excessive archive symlink chain")
+                stack.pop()
+                pending.extendleft(reversed(referenced.split("/")))
+
 
 def validate(archive, plan):
     with zipfile.ZipFile(archive) as bundle:
-        info = plistlib.loads(bundle.read("Arc Workshop.app/Contents/Info.plist"))
+        validate_archive_paths(bundle)
+        manifest = bundle.getinfo("Arc Workshop.app/Contents/Info.plist")
+        if manifest.file_size > MAX_PLIST_BYTES or stat.S_ISLNK(manifest.external_attr >> 16):
+            raise ValueError("Invalid application manifest")
+        info = plistlib.loads(bundle.read(manifest))
         feed = f'https://github.com/{CONFIG["distributionRepository"]}/releases/latest/download/appcast.xml'
         expected = {"CFBundleIdentifier": CONFIG["bundleID"], "CFBundleVersion": plan["build"],
                     "CFBundleShortVersionString": plan["version"], "SUPublicEDKey": CONFIG["publicKey"],
                     "SUFeedURL": feed, "SUVerifyUpdateBeforeExtraction": True, "SURequireSignedFeed": True}
         if any(info.get(k) != v for k, v in expected.items()) or "LSEnvironment" in info:
             raise ValueError("Release identity/update trust configuration mismatch")
-        seen = set()
-        for entry in bundle.infolist():
-            path = Path(entry.filename)
-            if path.is_absolute() or ".." in path.parts or path.parts[0] != "Arc Workshop.app":
-                raise ValueError("Unexpected release archive path")
-            normalized = str(path).casefold()
-            if normalized in seen:
-                raise ValueError("Duplicate archive entry")
-            seen.add(normalized)
-            if stat.S_ISLNK(entry.external_attr >> 16):
-                target = bundle.read(entry).decode("utf-8")
-                resolved = posixpath.normpath(posixpath.join(posixpath.dirname(entry.filename), target))
-                if target.startswith("/") or not resolved.startswith("Arc Workshop.app/"):
-                    raise ValueError("Archive symlink escapes the application")
         return info
 
 
@@ -63,7 +138,7 @@ def write_feed(archive, plan, info, signature):
     else:
         notes += " Developer ID signed and Apple notarized."
     if plan.get("engineBuildNeeded"):
-        notes += " A newer stable engine is awaiting a compatible patched binary; this update does not include that newer engine."
+        notes += " Engine freshness needs attention; a newer stable engine may be awaiting a compatible patched binary. This update does not claim engine security parity with current Chrome."
     ET.SubElement(item, "description").text = notes
     ET.SubElement(item, "enclosure", {
         "url": f'https://github.com/{CONFIG["distributionRepository"]}/releases/download/v{plan["version"]}/Arc-Workshop.zip',
@@ -88,7 +163,8 @@ def main():
                        "notarized": signing_policy["mode"] == "developer-id"}
     if status != expected_status:
         raise ValueError("Application signing policy was not satisfied")
-    key = os.environ["SPARKLE_PRIVATE_KEY"]
+    # Only the signing tool's stdin receives this key; do not copy it into child environments.
+    key = os.environ.pop("SPARKLE_PRIVATE_KEY")
     signature = subprocess.run([str(args.sign_tool), "--ed-key-file", "-", "-p", str(args.archive)],
         input=key, text=True, capture_output=True, check=True).stdout.strip()
     feed = write_feed(args.archive, plan, info, signature)
@@ -97,6 +173,7 @@ def main():
     digest = hashlib.sha256(args.archive.read_bytes()).hexdigest()
     (args.archive.parent / "SHA256SUMS.txt").write_text(digest + "  Arc-Workshop.zip\n")
     public = {k: plan[k] for k in ["version", "build", "engine", "latestStableEngine", "engineBuildNeeded"]}
+    public["latestStableChrome"] = plan.get("latestStableChrome")
     public["signing"] = status
     (args.archive.parent / "release.json").write_text(json.dumps(public, indent=2) + "\n")
     print("Validated update archive and signed update feed.")

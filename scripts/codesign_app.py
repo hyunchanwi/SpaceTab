@@ -18,12 +18,18 @@ import publish
 ROOT = Path(__file__).resolve().parents[1]
 MACHO = {b"\xcf\xfa\xed\xfe", b"\xce\xfa\xed\xfe", b"\xfe\xed\xfa\xcf", b"\xfe\xed\xfa\xce",
          b"\xca\xfe\xba\xbe", b"\xbe\xba\xfe\xca", b"\xca\xfe\xba\xbf", b"\xbf\xba\xfe\xca"}
+SECRET_ENV = {"APP_SIGNING_P12", "APP_SIGNING_PASSWORD", "SPARKLE_PRIVATE_KEY", "SOURCE_DEPLOY_KEY",
+              "NOTARY_API_PRIVATE_KEY", "NOTARY_API_KEY_ID", "NOTARY_API_ISSUER", "GH_TOKEN", "GITHUB_TOKEN"}
+
+
+def tool_environment():
+    return {key: value for key, value in os.environ.items() if key not in SECRET_ENV}
 
 
 def run(*command):
     # Errors stay generic: passwords, private key data and compiler diagnostics must not
     # enter a public Actions log. Only commands from this checked-in controller run here.
-    result = subprocess.run(command, capture_output=True, text=True)
+    result = subprocess.run(command, capture_output=True, text=True, env=tool_environment())
     if result.returncode:
         detail = (": " + result.stderr.strip()) if command[0] == "codesign" else ""
         raise RuntimeError(f"Release signing stopped: {Path(command[0]).name} failed{detail}")
@@ -50,10 +56,10 @@ def add_to_keychain_search_list(keychain):
 
 
 def write_entitlements(directory):
-    # Same hardened-runtime exceptions as the native CEF app; no get-task-allow or
-    # new keychain access groups. The browser's existing storage identity is retained.
+    # Keep CEF's JIT exceptions; release apps do not honor DYLD injection variables
+    # or get-task-allow. The browser's existing storage identity is retained.
     shared = {"com.apple.security.cs." + name: True for name in
-              ["allow-jit", "allow-unsigned-executable-memory", "disable-library-validation", "allow-dyld-environment-variables"]}
+              ["allow-jit", "allow-unsigned-executable-memory", "disable-library-validation"]}
     shared.update({"com.apple.security.device.audio-input": True, "com.apple.security.device.camera": True})
     helper = directory / "helper.plist"
     host = directory / "host.plist"
@@ -139,6 +145,11 @@ def main():
         if hashlib.sha256(certificate.read_bytes()).hexdigest() != signing_policy["certificateSHA256"]:
             raise ValueError("Signing certificate fingerprint changed")
         sha1 = hashlib.sha1(certificate.read_bytes()).hexdigest().upper()
+        # Parse/extract the artifact before importing the persistent signing identity.
+        # Child tools also never inherit the Actions secret environment variables.
+        run("ditto", "-x", "-k", str(args.archive.resolve()), str(directory / "bundle"))
+        app = directory / "bundle/Arc Workshop.app"
+        signing_targets(app)
         p12 = directory / "identity.p12"
         p12.write_bytes(base64.b64decode(os.environ["APP_SIGNING_P12"], validate=True))
         keychain_password = secrets.token_urlsafe(48)
@@ -150,8 +161,6 @@ def main():
             run("security", "import", str(p12), "-k", str(keychain), "-P", os.environ["APP_SIGNING_PASSWORD"], "-T", "/usr/bin/codesign")
             run("security", "set-key-partition-list", "-S", "apple-tool:,apple:,codesign:", "-s", "-k", keychain_password, str(keychain))
             previous_keychains = add_to_keychain_search_list(keychain)
-            run("ditto", "-x", "-k", str(args.archive.resolve()), str(directory / "bundle"))
-            app = directory / "bundle/Arc Workshop.app"
             sign_app(app, sha1, keychain, signing_policy, sha1, directory)
             staged = directory / "Arc-Workshop.zip"
             run("ditto", "-c", "-k", "--keepParent", str(app), str(staged))
@@ -164,8 +173,8 @@ def main():
             args.archive.write_bytes(staged.read_bytes())
         finally:
             if previous_keychains is not None:
-                subprocess.run(["security", "list-keychains", "-d", "user", "-s", *previous_keychains], capture_output=True)
-            subprocess.run(["security", "delete-keychain", str(keychain)], capture_output=True)
+                subprocess.run(["security", "list-keychains", "-d", "user", "-s", *previous_keychains], capture_output=True, env=tool_environment())
+            subprocess.run(["security", "delete-keychain", str(keychain)], capture_output=True, env=tool_environment())
     (args.archive.parent / "signing-status.json").write_text(json.dumps({
         "mode": signing_policy["mode"], "certificateSHA256": signing_policy["certificateSHA256"],
         "notarized": signing_policy["mode"] == "developer-id"}, indent=2) + "\n")

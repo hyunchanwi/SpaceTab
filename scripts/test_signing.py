@@ -12,6 +12,7 @@ import sys
 import tempfile
 import unittest
 from unittest.mock import patch
+from unittest.mock import Mock
 import zipfile
 
 import codesign_app
@@ -19,6 +20,23 @@ import publish
 
 
 class SigningTests(unittest.TestCase):
+    def test_external_tools_do_not_inherit_actions_credentials(self):
+        fixture = {key: "fixture-secret" for key in codesign_app.SECRET_ENV}
+        with patch.dict(os.environ, fixture), patch.object(codesign_app.subprocess, "run") as run:
+            run.return_value = Mock(returncode=0, stdout="", stderr="")
+            codesign_app.run("ditto", "fixture")
+            environment = run.call_args.kwargs["env"]
+            self.assertFalse(codesign_app.SECRET_ENV.intersection(environment))
+            self.assertIn("PATH", environment)
+
+    def test_release_entitlements_do_not_allow_dyld_environment_injection(self):
+        with tempfile.TemporaryDirectory() as temp:
+            for file in codesign_app.write_entitlements(Path(temp)):
+                entitlements = plistlib.loads(file.read_bytes())
+                self.assertNotIn("com.apple.security.cs.allow-dyld-environment-variables", entitlements)
+                self.assertNotIn("com.apple.security.get-task-allow", entitlements)
+                self.assertTrue(entitlements["com.apple.security.cs.allow-jit"])
+
     def test_release_policy_never_falls_back_to_ad_hoc(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)

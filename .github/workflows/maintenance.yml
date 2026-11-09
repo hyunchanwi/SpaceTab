@@ -36,6 +36,7 @@ jobs:
         run: |
           python3 scripts/test_maintenance.py
           python3 scripts/test_signing.py
+          python3 scripts/test_archive_security.py
       - name: Plan source and engine update
         id: plan
         env:
@@ -157,8 +158,8 @@ jobs:
           path: dist
       - name: Fetch pinned signature tool
         run: |
-          curl -fL --retry 3 -o "$RUNNER_TEMP/sparkle.tar.xz" https://github.com/sparkle-project/Sparkle/releases/download/2.10.0/Sparkle-2.10.0.tar.xz
-          echo "c2bf58aa8387266ac179357b1415d6f2635f044da8be41042af32425dae6da0c  $RUNNER_TEMP/sparkle.tar.xz" | shasum -a 256 -c -
+          curl -fL --retry 3 -o "$RUNNER_TEMP/sparkle.tar.xz" https://github.com/sparkle-project/Sparkle/releases/download/2.10.1/Sparkle-2.10.1.tar.xz
+          echo "1a856d2a9edb8e628de88121d7be04cf0e2167f8641650b78fca00b14244cf27  $RUNNER_TEMP/sparkle.tar.xz" | shasum -a 256 -c -
           mkdir "$RUNNER_TEMP/sparkle"
           tar -xJf "$RUNNER_TEMP/sparkle.tar.xz" -C "$RUNNER_TEMP/sparkle"
       - name: Validate archive and sign archive/feed
@@ -209,7 +210,7 @@ jobs:
         run: |
           ISSUE=$(gh issue list --state open --search '"Maintenance needs attention" in:title' --json number --jq '.[0].number')
           if [ "$PLAN_RESULT" != success ] || [ "$BUILD_RESULT" = failure ] || [ "$SIGN_RESULT" = failure ] || [ "$VERIFY_RESULT" = failure ] || [ "$PUBLISH_RESULT" = failure ] || [ "$ENGINE_WAITING" = true ]; then
-            printf '%s\n' "Automated maintenance requires attention." "" "Plan: $PLAN_RESULT; build: $BUILD_RESULT; sign: $SIGN_RESULT; signed-app verification: $VERIFY_RESULT; publish: $PUBLISH_RESULT." "A newer stable engine needs a patched binary: $ENGINE_WAITING." "" "$RUN_URL" > "$RUNNER_TEMP/attention.md"
+            printf '%s\n' "Automated maintenance requires attention." "" "Plan: $PLAN_RESULT; build: $BUILD_RESULT; sign: $SIGN_RESULT; signed-app verification: $VERIFY_RESULT; publish: $PUBLISH_RESULT." "Engine freshness review or a newer patched binary is required: $ENGINE_WAITING." "See release.json for the shipped CEF and latest observed stable Chrome version." "" "$RUN_URL" > "$RUNNER_TEMP/attention.md"
             if [ -n "$ISSUE" ]; then gh issue edit "$ISSUE" --body-file "$RUNNER_TEMP/attention.md"; else gh issue create --title 'Maintenance needs attention' --body-file "$RUNNER_TEMP/attention.md"; fi
           elif [ -n "$ISSUE" ]; then
             gh issue close "$ISSUE"

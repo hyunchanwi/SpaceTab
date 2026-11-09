@@ -31,6 +31,16 @@ def version(value):
     return tuple(map(int, value.split(".")))
 
 
+def engine_freshness(engine, latest_cef, chrome_response):
+    """CEF can lag Chrome even when our patched CEF is the latest available binary."""
+    candidates = [row.get("version", "") for row in chrome_response.get("versions", [])
+                  if isinstance(row, dict) and re.fullmatch(r"[0-9]+(?:\.[0-9]+){3}", row.get("version", ""))]
+    latest_chrome = max(candidates, key=version) if candidates else None
+    chromium = engine.split("+chromium-", 1)[1]
+    waiting = version(latest_cef) > version(engine) or latest_chrome is None or version(latest_chrome) > version(chromium)
+    return latest_chrome, waiting
+
+
 def git(root, *args, allow_failure=False):
     command = ["git", "-c", "core.hooksPath=/dev/null", "-C", str(root), *args]
     result = subprocess.run(command, text=True, capture_output=True)
@@ -111,7 +121,12 @@ def prepare(root, run, force):
     latest = max(stable, key=version)
     releases = get_json(f"https://api.github.com/repos/{repo}/releases?per_page=100")
     engine = choose_engine(current, [match[1], latest], releases)
-    waiting = version(latest) > version(engine["version"])
+    try:
+        chrome = get_json("https://versionhistory.googleapis.com/v1/chrome/platforms/mac/channels/stable/versions?pageSize=3")
+    except (urllib.error.URLError, TimeoutError, ValueError):
+        # An unavailable version service must not block a security fix or claim freshness.
+        chrome = {}
+    latest_chrome, waiting = engine_freshness(engine["version"], latest, chrome)
     (root / "workshop/engine.json").write_text(json.dumps(engine, indent=2) + "\n")
     git(root, "add", "workshop/engine.json")
     fingerprint = source_fingerprint(root)
@@ -123,11 +138,13 @@ def prepare(root, run, force):
         published = ""
     previous_file = root / "workshop/last-release.json"
     previous = json.loads(previous_file.read_text()) if previous_file.exists() else {}
-    signing_policy = hashlib.sha256((ROOT / "signing.json").read_bytes()).hexdigest()
+    signing_policy = hashlib.sha256((ROOT / "signing.json").read_bytes()
+                                    + (ROOT / "scripts/codesign_app.py").read_bytes()).hexdigest()
     unpublished = not published or published != "v" + previous.get("version", "")
     changed = merged or engine != current or unpublished or fingerprint != previous.get("sourceFingerprint") or signing_policy != previous.get("signingPolicy")
     plan = {"changed": changed or force, "base": base, "upstream": upstream,
             "engine": engine, "latestStableEngine": latest, "engineBuildNeeded": waiting,
+            "latestStableChrome": latest_chrome,
             "sourceFingerprint": fingerprint,
             "signingPolicy": signing_policy,
             "version": "1.0." + run, "build": datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%d%H%M%S"),

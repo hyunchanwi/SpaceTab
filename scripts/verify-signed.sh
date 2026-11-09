@@ -28,3 +28,10 @@ if ! (cd "$SOURCE" && bash Tests/smoke-launch.sh "$APP") > "$LOG" 2>&1; then
   exit 1
 fi
 echo 'Final signed app launched, quit and restored state on an isolated profile.'
+if ! (cd "$SOURCE" && python3 Tests/security-runtime.py "$APP") > "$LOG" 2>&1; then
+  echo 'Final browser runtime security checks failed; no update will be published.'
+  # Only this fixed-format summary is public; browser logs and private source stay on the runner.
+  sed -n '/^Runtime security:/p' "$LOG"
+  exit 1
+fi
+sed -n '/^Runtime security:/p' "$LOG"

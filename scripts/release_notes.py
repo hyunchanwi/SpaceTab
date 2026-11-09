@@ -13,6 +13,9 @@ print("### Install\n")
 print("Download **Arc-Workshop.zip**, unzip it, and move **Arc Workshop.app** to Applications. Apple silicon; macOS 14 or later.\n")
 print("### In this release\n")
 print("- Automated browser tests and isolated launch, quit and restore checks passed.")
+print("- Imported extension IDs are validated before filesystem access; release archives have stricter path, symlink and size checks.")
+print("- Disposable-key update tampering checks and real-browser isolation/TLS checks passed before publication.")
+print("- Update framework: Sparkle 2.10.1.")
 print(f"- Chromium/CEF: `{plan['engine']['version']}`.")
 if signing["mode"] == "persistent-personal":
     print("- Signed with a persistent personal certificate. This is **not Apple Developer ID signing or Apple notarization**.")
@@ -20,7 +23,10 @@ if signing["mode"] == "persistent-personal":
 else:
     print("- Signed with Developer ID and notarized by Apple.")
 if plan.get("engineBuildNeeded"):
-    print("- A newer stable engine is awaiting a compatible patched binary; it is not included in this release.")
+    if plan.get("latestStableChrome"):
+        print(f"- Engine freshness needs attention: Chrome stable reports `{plan['latestStableChrome']}`; this release keeps the tested, compatible patched engine shown above.")
+    else:
+        print("- Engine freshness could not be confirmed; this release keeps the tested, compatible patched engine shown above.")
 print("\n### Update and recovery\n")
 print("Installed copies check for signed updates. Installation requires your action by default. Before updating, the app saves the previous app and browsing profile locally; recovery is manual.\n")
 print("[Getting started](https://github.com/hyunchanwi/arc-workshop-updates#install) · [한국어 안내](https://github.com/hyunchanwi/arc-workshop-updates/blob/main/README.ko.md) · [Report a bug](https://github.com/hyunchanwi/arc-workshop-updates/issues/new/choose)\n")

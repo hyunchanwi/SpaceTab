@@ -16,6 +16,10 @@ if ! CRA_WORKSHOP_RELEASE=1 CRA_VERSION="$VERSION" CRA_BUILD="$BUILD" bash scrip
   echo 'Release build failed. No update will be published.'; exit 1
 fi
 codesign --verify --deep --strict 'build/Arc Workshop.app'
+echo 'Checking signed-update tampering with disposable keys.'
+if ! python3 Tests/update-signature-security.py > "$LOG" 2>&1; then
+  echo 'Update signature security checks failed. No update will be published.'; exit 1
+fi
 echo 'Checking launch, clean quit and restored state on an isolated profile.'
 if ! bash Tests/smoke-launch.sh 'build/Arc Workshop.app' > "$LOG" 2>&1; then
   echo 'Isolated launch/restore check failed. No update will be published.'; exit 1

@@ -124,6 +124,10 @@ without executing the browser. See [update architecture](docs/updates.md) and th
 
 ## Questions before you try it
 
+This build currently lacks Google Safe Browsing phishing and malware warnings. Ad blocking
+does not replace that protection. Compatible patched engine availability can delay Chromium
+security updates. See [security scope and release checks](SECURITY.md).
+
 <details>
 <summary>Is the app called Cra or Arc Workshop?</summary>
 

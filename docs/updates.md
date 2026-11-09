@@ -13,13 +13,23 @@ Arc Workshop uses two independent signatures:
 2. **Test/build:** run native/model checks, build an ad-hoc intermediate artifact, and check isolated launch, quit and restore. This job has no publishing token or real app/update signing key. A separate test identity verifies code-signing and Keychain continuity.
 3. **Sign:** validate the artifact bundle identifier, version, feed URL, update key and ZIP paths. Import the pinned app-signing identity into a temporary Keychain. Sign nested code from the inside out, then verify strictly. The browser is never run in the signing job.
 4. **Notarize, when configured:** Developer ID mode additionally requires Apple notarization, ticket stapling and Gatekeeper assessment. Personal mode never claims notarization.
-5. **Verify signed app:** on a fresh runner without app/update signing credentials or release-write permission, validate the final certificate and run isolated launch, quit and restore checks on the signed app.
+5. **Verify signed app:** on a fresh runner without app/update signing credentials or release-write permission, validate the final certificate and run isolated launch, quit, restore and browser origin/profile/TLS boundary checks on the signed app.
 6. **Publish:** sign the final ZIP and appcast with the dedicated Sparkle key, upload a draft, promote the tested source, then make the release public. A failed prerequisite stops publication.
 7. **Install:** the app verifies updates, prepares a local app/profile snapshot, and installs after the user chooses. The profile snapshot is refreshed on clean Chromium shutdown.
 
 Source changes, engine changes and signing-policy changes trigger a build. Documentation
 changes alone do not. A successful unchanged run skips the macOS build and publication.
 The displayed release version is generated from the maintenance run number; gaps are normal.
+
+The build checks Sparkle's actual signature tool with disposable keys and tampered archives
+and feeds. Signing imports the persistent identity only after bounded ZIP validation,
+extraction and native-binary inspection. External tools do not inherit Actions credentials.
+Release entitlements retain CEF's JIT requirements but disable DYLD environment injection.
+
+Engine freshness is checked against both stable CEF availability and Google's macOS stable
+Chrome version history. `release.json` includes `latestStableChrome` when available. A lag
+or failed freshness lookup raises maintenance attention; it does not silently substitute a
+stock, incompatible engine or block an otherwise tested application security fix.
 
 ## Public release files
 
