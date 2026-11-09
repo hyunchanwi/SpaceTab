@@ -123,16 +123,18 @@ def prepare(root, run, force):
         published = ""
     previous_file = root / "workshop/last-release.json"
     previous = json.loads(previous_file.read_text()) if previous_file.exists() else {}
+    signing_policy = hashlib.sha256((ROOT / "signing.json").read_bytes()).hexdigest()
     unpublished = not published or published != "v" + previous.get("version", "")
-    changed = merged or engine != current or unpublished or fingerprint != previous.get("sourceFingerprint")
+    changed = merged or engine != current or unpublished or fingerprint != previous.get("sourceFingerprint") or signing_policy != previous.get("signingPolicy")
     plan = {"changed": changed or force, "base": base, "upstream": upstream,
             "engine": engine, "latestStableEngine": latest, "engineBuildNeeded": waiting,
             "sourceFingerprint": fingerprint,
+            "signingPolicy": signing_policy,
             "version": "1.0." + run, "build": datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%d%H%M%S"),
             "branch": "maintenance/candidate-" + run}
     if plan["changed"]:
         (root / "workshop/engine.json").write_text(json.dumps(engine, indent=2) + "\n")
-        state = {k: plan[k] for k in ["upstream", "engine", "version", "build", "sourceFingerprint"]}
+        state = {k: plan[k] for k in ["upstream", "engine", "version", "build", "sourceFingerprint", "signingPolicy"]}
         (root / "workshop/last-release.json").write_text(json.dumps(state, indent=2) + "\n")
         git(root, "add", "workshop")
         git(root, "commit", "--allow-empty", "-m", "Prepare Arc Workshop " + plan["version"])

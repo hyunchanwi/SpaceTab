@@ -33,7 +33,9 @@ jobs:
         with:
           persist-credentials: false
       - name: Controller regression tests
-        run: python3 scripts/test_maintenance.py
+        run: |
+          python3 scripts/test_maintenance.py
+          python3 scripts/test_signing.py
       - name: Plan source and engine update
         id: plan
         env:
@@ -72,6 +74,10 @@ jobs:
           VERSION: ${{ needs.plan.outputs.version }}
           BUILD: ${{ needs.plan.outputs.build }}
         run: bash scripts/build.sh "$RUNNER_TEMP/source"
+      - name: Persistent identity and isolated Keychain regression check
+        env:
+          WORKSHOP_SIGNING_INTEGRATION: '1'
+        run: python3 scripts/test_signing.py
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
           name: tested-browser
@@ -82,7 +88,7 @@ jobs:
   publish:
     needs: [plan, build]
     runs-on: macos-26
-    timeout-minutes: 15
+    timeout-minutes: 40
     permissions:
       contents: write
     steps:
@@ -96,6 +102,14 @@ jobs:
         with:
           name: tested-browser
           path: dist
+      - name: Sign with the persistent application identity
+        env:
+          APP_SIGNING_P12: ${{ secrets.APP_SIGNING_P12 }}
+          APP_SIGNING_PASSWORD: ${{ secrets.APP_SIGNING_PASSWORD }}
+          NOTARY_API_PRIVATE_KEY: ${{ secrets.NOTARY_API_PRIVATE_KEY }}
+          NOTARY_API_KEY_ID: ${{ secrets.NOTARY_API_KEY_ID }}
+          NOTARY_API_ISSUER: ${{ secrets.NOTARY_API_ISSUER }}
+        run: python3 scripts/codesign_app.py dist/Arc-Workshop.zip plan.json
       - name: Fetch pinned signature tool
         run: |
           curl -fL --retry 3 -o "$RUNNER_TEMP/sparkle.tar.xz" https://github.com/sparkle-project/Sparkle/releases/download/2.10.0/Sparkle-2.10.0.tar.xz
@@ -111,7 +125,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ needs.plan.outputs.version }}
         run: |
-          printf '%s\n' "Arc Workshop $VERSION. Automated browser tests and isolated launch/restore checks passed. Personal build; not Apple notarized." > "$RUNNER_TEMP/notes.md"
+          python3 scripts/release_notes.py plan.json > "$RUNNER_TEMP/notes.md"
           gh release create "v$VERSION" dist/* --draft --target main --title "Arc Workshop $VERSION" --notes-file "$RUNNER_TEMP/notes.md"
       - name: Promote tested source
         env:

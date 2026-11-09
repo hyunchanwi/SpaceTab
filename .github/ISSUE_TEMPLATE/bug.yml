@@ -1,0 +1,31 @@
+name: Bug report / 문제 제보
+description: Report a reproducible problem without private browsing data.
+title: "[Bug] "
+body:
+  - type: input
+    id: version
+    attributes:
+      label: Arc Workshop version / 앱 버전
+      placeholder: e.g. 1.0.2
+    validations:
+      required: true
+  - type: input
+    id: system
+    attributes:
+      label: macOS version and Mac chip / macOS 버전과 칩
+      placeholder: e.g. macOS 26, M2
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Reproduction steps / 재현 방법
+      description: Use example URLs. Do not attach a profile, cookies, passwords or Keychain exports.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected and actual behavior / 기대 동작과 실제 동작
+    validations:
+      required: true

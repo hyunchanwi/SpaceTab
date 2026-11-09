@@ -1,0 +1,11 @@
+name: Feature request / 기능 제안
+description: Describe a browsing workflow you want to improve.
+title: "[Feature] "
+body:
+  - type: textarea
+    id: workflow
+    attributes:
+      label: Workflow and proposed improvement / 사용 상황과 원하는 개선
+      description: Explain the action you repeat and the behavior you would like.
+    validations:
+      required: true

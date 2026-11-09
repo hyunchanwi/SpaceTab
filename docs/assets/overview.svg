@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="680" viewBox="0 0 1200 680" role="img" aria-labelledby="title desc">
+  <title id="title">Arc Workshop — A familiar home for your spaces</title>
+  <desc id="desc">An interface illustration with a vertical sidebar, shared favorites, space-specific folders and Work, Play and Study spaces. All content is fictional.</desc>
+  <defs>
+    <linearGradient id="bg" x2="1" y2="1"><stop stop-color="#152126"/><stop offset="1" stop-color="#152b29"/></linearGradient>
+    <linearGradient id="side" x2="1" y2="1"><stop stop-color="#233c38"/><stop offset="1" stop-color="#1d2e32"/></linearGradient>
+    <linearGradient id="card" x2="1" y2="1"><stop stop-color="#dce8d9"/><stop offset="1" stop-color="#c5d7d5"/></linearGradient>
+    <filter id="shadow"><feDropShadow dx="0" dy="14" stdDeviation="18" flood-opacity=".25"/></filter>
+  </defs>
+  <rect width="1200" height="680" rx="28" fill="url(#bg)"/>
+  <g font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
+    <text x="56" y="57" font-size="15" letter-spacing="3" font-weight="600" fill="#98b9aa">ARC WORKSHOP</text>
+    <text x="56" y="112" font-size="39" font-weight="600" fill="#f4f5e9">A familiar home for your spaces.</text>
+    <text x="57" y="148" font-size="18" fill="#b3c7bd">One sidebar. Shared favorites. Room for every part of your day.</text>
+    <g transform="translate(56 188)" filter="url(#shadow)">
+      <rect width="1088" height="438" rx="20" fill="#e9eee7"/>
+      <rect width="258" height="438" rx="20" fill="url(#side)"/>
+      <path d="M238 0h20v438h-20" fill="#213735"/>
+      <circle cx="24" cy="26" r="6" fill="#ed9c8e"/><circle cx="45" cy="26" r="6" fill="#e3c581"/><circle cx="66" cy="26" r="6" fill="#9dc4a5"/>
+      <rect x="18" y="53" width="105" height="59" rx="13" fill="#43615b"/>
+      <rect x="134" y="53" width="105" height="59" rx="13" fill="#43615b"/>
+      <path d="M57 75h27v17H57z M57 75l13.5 10L84 75" fill="none" stroke="#e9eee7" stroke-width="2"/>
+      <rect x="170" y="72" width="32" height="22" rx="6" fill="#c5d6c1"/>
+      <path d="M183 77l9 6-9 6z" fill="#29443d"/>
+      <text x="21" y="145" font-size="12" letter-spacing="1.4" fill="#9bb7ab">WORK SPACE</text>
+      <rect x="13" y="160" width="232" height="39" rx="9" fill="#4c6b60"/>
+      <path d="M28 174h10l4 4h12v11H28z" fill="none" stroke="#d3e1d2" stroke-width="1.8"/>
+      <text x="68" y="185" font-size="15" fill="#f2f5e8">Projects</text>
+      <circle cx="36" cy="223" r="7" fill="#aac7b0"/>
+      <text x="58" y="228" font-size="15" fill="#d6e3d7">Reading list</text>
+      <circle cx="36" cy="261" r="7" fill="#aac7b0"/>
+      <text x="58" y="266" font-size="15" fill="#d6e3d7">Design notes</text>
+      <path d="M23 292h210" stroke="#537067"/>
+      <text x="24" y="319" font-size="12" letter-spacing="1.4" fill="#9bb7ab">TODAY</text>
+      <circle cx="36" cy="347" r="7" fill="#849f98"/>
+      <text x="58" y="352" font-size="15" fill="#d6e3d7">New ideas</text>
+      <g transform="translate(14 385)">
+        <rect width="76" height="35" rx="17" fill="#c2d8bd"/>
+        <text x="38" y="23" text-anchor="middle" font-size="13" font-weight="600" fill="#29443d">Work</text>
+        <text x="116" y="23" text-anchor="middle" font-size="13" fill="#b8cbbf">Play</text>
+        <text x="194" y="23" text-anchor="middle" font-size="13" fill="#b8cbbf">Study</text>
+      </g>
+      <text x="286" y="30" font-size="12" fill="#667b71">workshop.example / welcome</text>
+      <rect x="279" y="51" width="788" height="366" rx="13" fill="url(#card)"/>
+      <text x="323" y="107" font-size="12" font-weight="600" letter-spacing="2" fill="#536f62">A LITTLE MORE ROOM</text>
+      <text x="320" y="158" font-size="38" font-weight="600" fill="#253e35">Pick up where you left off.</text>
+      <text x="322" y="195" font-size="17" fill="#536b5e">Your favorite page stays with you as you switch spaces.</text>
+      <g transform="translate(322 238)">
+        <rect width="209" height="125" rx="12" fill="#f2f4e9" fill-opacity=".8"/>
+        <text x="20" y="35" font-size="14" font-weight="600" fill="#2d493d">Shared favorites</text>
+        <text x="20" y="62" font-size="13" fill="#61776a">Same live tab.</text>
+        <text x="20" y="83" font-size="13" fill="#61776a">Across your spaces.</text>
+        <rect x="230" width="209" height="125" rx="12" fill="#f2f4e9" fill-opacity=".8"/>
+        <text x="250" y="35" font-size="14" font-weight="600" fill="#2d493d">Separate contexts</text>
+        <text x="250" y="62" font-size="13" fill="#61776a">Pins and folders</text>
+        <text x="250" y="83" font-size="13" fill="#61776a">for each space.</text>
+        <rect x="460" width="209" height="125" rx="12" fill="#f2f4e9" fill-opacity=".8"/>
+        <text x="480" y="35" font-size="14" font-weight="600" fill="#2d493d">A quiet frame</text>
+        <text x="480" y="62" font-size="13" fill="#61776a">Hide the sidebar.</text>
+        <text x="480" y="83" font-size="13" fill="#61776a">Focus on the page.</text>
+      </g>
+    </g>
+    <text x="57" y="655" font-size="12" fill="#8ea99c">INTERFACE ILLUSTRATION · FICTIONAL CONTENT · INDEPENDENT CRA-BASED PROJECT</text>
+  </g>
+</svg>

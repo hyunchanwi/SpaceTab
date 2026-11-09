@@ -5,9 +5,11 @@ import datetime
 import hashlib
 import json
 import os
+import posixpath
 from pathlib import Path
 import plistlib
 import subprocess
+import stat
 import xml.etree.ElementTree as ET
 import zipfile
 
@@ -26,10 +28,20 @@ def validate(archive, plan):
                     "SUFeedURL": feed, "SUVerifyUpdateBeforeExtraction": True, "SURequireSignedFeed": True}
         if any(info.get(k) != v for k, v in expected.items()) or "LSEnvironment" in info:
             raise ValueError("Release identity/update trust configuration mismatch")
+        seen = set()
         for entry in bundle.infolist():
             path = Path(entry.filename)
             if path.is_absolute() or ".." in path.parts or path.parts[0] != "Arc Workshop.app":
                 raise ValueError("Unexpected release archive path")
+            normalized = str(path).casefold()
+            if normalized in seen:
+                raise ValueError("Duplicate archive entry")
+            seen.add(normalized)
+            if stat.S_ISLNK(entry.external_attr >> 16):
+                target = bundle.read(entry).decode("utf-8")
+                resolved = posixpath.normpath(posixpath.join(posixpath.dirname(entry.filename), target))
+                if target.startswith("/") or not resolved.startswith("Arc Workshop.app/"):
+                    raise ValueError("Archive symlink escapes the application")
         return info
 
 
@@ -45,6 +57,11 @@ def write_feed(archive, plan, info, signature):
                        ("minimumSystemVersion", info["LSMinimumSystemVersion"])]:
         ET.SubElement(item, "{" + SPARKLE + "}" + key).text = value
     notes = "Tested browser and Chromium/CEF maintenance update."
+    status = json.loads((archive.parent / "signing-status.json").read_text())
+    if status["mode"] == "persistent-personal":
+        notes += " Uses the same personal application signing identity across versions. Not Apple notarized. The first transition from an ad-hoc build may need Keychain approval."
+    else:
+        notes += " Developer ID signed and Apple notarized."
     if plan.get("engineBuildNeeded"):
         notes += " A newer stable engine is awaiting a compatible patched binary; this update does not include that newer engine."
     ET.SubElement(item, "description").text = notes
@@ -65,6 +82,12 @@ def main():
     args = parser.parse_args()
     plan = json.loads(args.plan.read_text())
     info = validate(args.archive, plan)
+    status = json.loads((args.archive.parent / "signing-status.json").read_text())
+    signing_policy = json.loads((ROOT / "signing.json").read_text())
+    expected_status = {"mode": signing_policy["mode"], "certificateSHA256": signing_policy["certificateSHA256"],
+                       "notarized": signing_policy["mode"] == "developer-id"}
+    if status != expected_status:
+        raise ValueError("Application signing policy was not satisfied")
     key = os.environ["SPARKLE_PRIVATE_KEY"]
     signature = subprocess.run([str(args.sign_tool), "--ed-key-file", "-", "-p", str(args.archive)],
         input=key, text=True, capture_output=True, check=True).stdout.strip()
@@ -74,6 +97,7 @@ def main():
     digest = hashlib.sha256(args.archive.read_bytes()).hexdigest()
     (args.archive.parent / "SHA256SUMS.txt").write_text(digest + "  Arc-Workshop.zip\n")
     public = {k: plan[k] for k in ["version", "build", "engine", "latestStableEngine", "engineBuildNeeded"]}
+    public["signing"] = status
     (args.archive.parent / "release.json").write_text(json.dumps(public, indent=2) + "\n")
     print("Validated update archive and signed update feed.")
 
