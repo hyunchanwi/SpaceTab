@@ -85,12 +85,10 @@ jobs:
           compression-level: 0
           retention-days: 3
 
-  publish:
+  sign:
     needs: [plan, build]
     runs-on: macos-26
     timeout-minutes: 40
-    permissions:
-      contents: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
@@ -110,6 +108,53 @@ jobs:
           NOTARY_API_KEY_ID: ${{ secrets.NOTARY_API_KEY_ID }}
           NOTARY_API_ISSUER: ${{ secrets.NOTARY_API_ISSUER }}
         run: python3 scripts/codesign_app.py dist/Arc-Workshop.zip plan.json
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: signed-browser
+          path: dist/*
+          compression-level: 0
+          retention-days: 3
+
+  verify-signed:
+    needs: [plan, sign]
+    runs-on: macos-26
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333
+        with:
+          name: maintenance-plan
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333
+        with:
+          name: signed-browser
+          path: dist
+      - name: Fetch the tested source and discard its credential
+        env:
+          SOURCE_DEPLOY_KEY: ${{ secrets.SOURCE_DEPLOY_KEY }}
+          CANDIDATE: ${{ needs.plan.outputs.candidate }}
+        run: bash scripts/source.sh checkout "$RUNNER_TEMP/source"
+      - name: Launch and restore the final signed app without signing credentials
+        run: bash scripts/verify-signed.sh "$RUNNER_TEMP/source"
+
+  publish:
+    needs: [plan, verify-signed]
+    runs-on: macos-26
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333
+        with:
+          name: maintenance-plan
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333
+        with:
+          name: signed-browser
+          path: dist
       - name: Fetch pinned signature tool
         run: |
           curl -fL --retry 3 -o "$RUNNER_TEMP/sparkle.tar.xz" https://github.com/sparkle-project/Sparkle/releases/download/2.10.0/Sparkle-2.10.0.tar.xz
@@ -140,7 +185,7 @@ jobs:
         run: gh release edit "v$VERSION" --draft=false --latest
 
   attention:
-    needs: [plan, build, publish]
+    needs: [plan, build, sign, verify-signed, publish]
     if: always()
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -156,13 +201,15 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           PLAN_RESULT: ${{ needs.plan.result }}
           BUILD_RESULT: ${{ needs.build.result }}
+          SIGN_RESULT: ${{ needs.sign.result }}
+          VERIFY_RESULT: ${{ needs.verify-signed.result }}
           PUBLISH_RESULT: ${{ needs.publish.result }}
           ENGINE_WAITING: ${{ needs.plan.outputs.engineBuildNeeded }}
           RUN_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           ISSUE=$(gh issue list --state open --search '"Maintenance needs attention" in:title' --json number --jq '.[0].number')
-          if [ "$PLAN_RESULT" != success ] || [ "$BUILD_RESULT" = failure ] || [ "$PUBLISH_RESULT" = failure ] || [ "$ENGINE_WAITING" = true ]; then
-            printf '%s\n' "Automated maintenance requires attention." "" "Plan: $PLAN_RESULT; build: $BUILD_RESULT; publish: $PUBLISH_RESULT." "A newer stable engine needs a patched binary: $ENGINE_WAITING." "" "$RUN_URL" > "$RUNNER_TEMP/attention.md"
+          if [ "$PLAN_RESULT" != success ] || [ "$BUILD_RESULT" = failure ] || [ "$SIGN_RESULT" = failure ] || [ "$VERIFY_RESULT" = failure ] || [ "$PUBLISH_RESULT" = failure ] || [ "$ENGINE_WAITING" = true ]; then
+            printf '%s\n' "Automated maintenance requires attention." "" "Plan: $PLAN_RESULT; build: $BUILD_RESULT; sign: $SIGN_RESULT; signed-app verification: $VERIFY_RESULT; publish: $PUBLISH_RESULT." "A newer stable engine needs a patched binary: $ENGINE_WAITING." "" "$RUN_URL" > "$RUNNER_TEMP/attention.md"
             if [ -n "$ISSUE" ]; then gh issue edit "$ISSUE" --body-file "$RUNNER_TEMP/attention.md"; else gh issue create --title 'Maintenance needs attention' --body-file "$RUNNER_TEMP/attention.md"; fi
           elif [ -n "$ISSUE" ]; then
             gh issue close "$ISSUE"

@@ -2,8 +2,7 @@
 
 ## Current choice
 
-The maintainer does not currently have a confirmed Apple Developer Program membership.
-The pipeline therefore supports a persistent **self-signed personal code-signing identity**.
+The personal release channel uses a persistent **self-signed personal code-signing identity**.
 Every release uses the same certificate and a designated requirement bound to that
 certificate and the executable's signing identifier. This avoids tying Keychain identity
 to a different ad-hoc code hash for each build.
