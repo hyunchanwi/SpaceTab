@@ -39,3 +39,11 @@ if ! (cd "$SOURCE" && python3 Tests/security-runtime.py "$APP") > "$LOG" 2>&1; t
   exit 1
 fi
 sed -n '/^Runtime security:/p' "$LOG"
+if [ "$(/usr/libexec/PlistBuddy -c 'Print :SpaceTabBackgroundInspectionVersion' "$APP/Contents/Info.plist" 2>/dev/null || true)" = 1 ]; then
+  if ! (cd "$SOURCE" && python3 Tests/background-inspection-runtime.py "$APP") > "$LOG" 2>&1; then
+    echo 'Final background inspection checks failed; no update will be published.'
+    sed -n '/^Background inspection:/p' "$LOG"
+    exit 1
+  fi
+  sed -n '/^Background inspection:/p' "$LOG"
+fi
