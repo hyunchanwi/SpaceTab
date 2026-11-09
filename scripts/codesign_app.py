@@ -9,6 +9,7 @@ from pathlib import Path
 import plistlib
 import re
 import secrets
+import shlex
 import subprocess
 import tempfile
 
@@ -38,6 +39,14 @@ def policy():
     if value["mode"] == "developer-id" and not re.fullmatch(r"[A-Z0-9]{10}", value.get("teamID", "")):
         raise ValueError("Developer ID releases require a pinned Apple team")
     return value
+
+
+def add_to_keychain_search_list(keychain):
+    # Hosted runners can keep a fixed search list. codesign's --keychain narrows its
+    # identity lookup but does not reliably add imported private keys to that list.
+    previous = shlex.split(run("security", "list-keychains", "-d", "user"))
+    run("security", "list-keychains", "-d", "user", "-s", *previous, str(keychain))
+    return previous
 
 
 def write_entitlements(directory):
@@ -133,12 +142,14 @@ def main():
         p12 = directory / "identity.p12"
         p12.write_bytes(base64.b64decode(os.environ["APP_SIGNING_P12"], validate=True))
         keychain_password = secrets.token_urlsafe(48)
+        previous_keychains = None
         try:
             run("security", "create-keychain", "-p", keychain_password, str(keychain))
             run("security", "set-keychain-settings", "-lut", "3600", str(keychain))
             run("security", "unlock-keychain", "-p", keychain_password, str(keychain))
             run("security", "import", str(p12), "-k", str(keychain), "-P", os.environ["APP_SIGNING_PASSWORD"], "-T", "/usr/bin/codesign")
             run("security", "set-key-partition-list", "-S", "apple-tool:,apple:,codesign:", "-s", "-k", keychain_password, str(keychain))
+            previous_keychains = add_to_keychain_search_list(keychain)
             run("ditto", "-x", "-k", str(args.archive.resolve()), str(directory / "bundle"))
             app = directory / "bundle/Arc Workshop.app"
             sign_app(app, sha1, keychain, signing_policy, sha1, directory)
@@ -152,6 +163,8 @@ def main():
             # Replace the unsigned build only after the entire signing/notary stage succeeds.
             args.archive.write_bytes(staged.read_bytes())
         finally:
+            if previous_keychains is not None:
+                subprocess.run(["security", "list-keychains", "-d", "user", "-s", *previous_keychains], capture_output=True)
             subprocess.run(["security", "delete-keychain", str(keychain)], capture_output=True)
     (args.archive.parent / "signing-status.json").write_text(json.dumps({
         "mode": signing_policy["mode"], "certificateSHA256": signing_policy["certificateSHA256"],

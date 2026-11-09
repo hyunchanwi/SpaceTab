@@ -1,0 +1,17 @@
+name: Signing regression check
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  isolated-signing:
+    runs-on: macos-26
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Check two builds against an isolated test Keychain
+        env:
+          WORKSHOP_SIGNING_INTEGRATION: '1'
+        run: python3 scripts/test_signing.py

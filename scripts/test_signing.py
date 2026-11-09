@@ -81,12 +81,15 @@ class SigningTests(unittest.TestCase):
             keychain = directory / "test.keychain-db"
             password = secrets.token_urlsafe(32)
             run = codesign_app.run
+            previous_keychains = None
             try:
                 run("security", "create-keychain", "-p", password, str(keychain))
                 run("security", "unlock-keychain", "-p", password, str(keychain))
                 run("security", "import", str(directory / "app-signing.p12"), "-k", str(keychain),
                     "-P", (directory / "app-signing-password").read_text(), "-T", "/usr/bin/codesign")
                 run("security", "set-key-partition-list", "-S", "apple-tool:,apple:,codesign:", "-s", "-k", password, str(keychain))
+                previous_keychains = codesign_app.add_to_keychain_search_list(keychain)
+                print(run("security", "find-identity", "-p", "codesigning", str(keychain)).strip())
                 source = directory / "probe.swift"
                 source.write_text('''import Foundation
 import Security
@@ -122,6 +125,8 @@ print("fixture build VERSION succeeded")
                 self.assertEqual(requirements[0], requirements[1])
                 self.assertNotEqual((directory / "probe1").read_bytes(), (directory / "probe2").read_bytes())
             finally:
+                if previous_keychains is not None:
+                    subprocess.run(["security", "list-keychains", "-d", "user", "-s", *previous_keychains], capture_output=True)
                 subprocess.run(["security", "delete-keychain", str(keychain)], capture_output=True)
 
 
