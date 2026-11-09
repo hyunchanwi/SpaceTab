@@ -1,0 +1,51 @@
+name: Security artifact recheck
+
+on:
+  workflow_dispatch:
+    inputs:
+      build_run:
+        description: Completed maintenance run containing the signed-browser and maintenance-plan artifacts
+        required: true
+        type: string
+      source_commit:
+        description: Reviewed private source commit containing the security harness (40 hex characters)
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  recheck:
+    runs-on: macos-26
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Validate manual identifiers
+        env:
+          BUILD_RUN: ${{ inputs.build_run }}
+          CANDIDATE: ${{ inputs.source_commit }}
+        run: |
+          [[ "$BUILD_RUN" =~ ^[0-9]+$ ]]
+          [[ "$CANDIDATE" =~ ^[0-9a-f]{40}$ ]]
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333
+        with:
+          name: maintenance-plan
+          run-id: ${{ inputs.build_run }}
+          github-token: ${{ github.token }}
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333
+        with:
+          name: signed-browser
+          run-id: ${{ inputs.build_run }}
+          github-token: ${{ github.token }}
+          path: dist
+      - name: Fetch reviewed harness source and discard its credential
+        env:
+          SOURCE_DEPLOY_KEY: ${{ secrets.SOURCE_DEPLOY_KEY }}
+          CANDIDATE: ${{ inputs.source_commit }}
+        run: bash scripts/source.sh checkout "$RUNNER_TEMP/source"
+      - name: Verify existing signed artifact with no signing keys or publishing permission
+        run: bash scripts/verify-signed.sh "$RUNNER_TEMP/source"
