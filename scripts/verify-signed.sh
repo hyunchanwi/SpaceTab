@@ -7,11 +7,15 @@ STAGE="$(mktemp -d "${RUNNER_TEMP:-/tmp}/workshop-final-check.XXXXXX")"
 LOG="$STAGE/check.log"
 trap 'rm -rf "$STAGE"' EXIT
 cd "$ROOT"
-python3 - <<'PY'
-import hashlib, json, pathlib, sys
+python3 - "$STAGE/app-root" <<'PY'
+import hashlib, json, os, pathlib, sys, zipfile
 sys.path.insert(0, 'scripts')
 import publish
-publish.validate(pathlib.Path('dist/Arc-Workshop.zip'), json.load(open('plan.json')))
+allow_legacy = os.environ.get('WORKSHOP_ALLOW_LEGACY_APP_NAME') == '1'
+archive = pathlib.Path('dist/Arc-Workshop.zip')
+publish.validate(archive, json.load(open('plan.json')), allow_legacy_app_name=allow_legacy)
+with zipfile.ZipFile(archive) as bundle:
+    pathlib.Path(sys.argv[1]).write_text(publish.application_root(bundle, allow_legacy))
 policy = json.load(open('signing.json'))
 certificate = pathlib.Path('signing/app-signing.cer').read_bytes()
 assert hashlib.sha256(certificate).hexdigest() == policy['certificateSHA256']
@@ -19,7 +23,7 @@ status = json.load(open('dist/signing-status.json'))
 assert status == {'mode': policy['mode'], 'certificateSHA256': policy['certificateSHA256'], 'notarized': policy['mode'] == 'developer-id'}
 PY
 ditto -x -k dist/Arc-Workshop.zip "$STAGE"
-APP="$STAGE/Arc Workshop.app"
+APP="$STAGE/$(cat "$STAGE/app-root")"
 codesign --verify --deep --strict "$APP"
 CERT_SHA1=$(openssl x509 -inform DER -in signing/app-signing.cer -noout -fingerprint -sha1 | cut -d= -f2 | tr -d ':')
 codesign --verify -R "=certificate leaf = H\"$CERT_SHA1\"" "$APP"

@@ -1,8 +1,13 @@
-# Arc Workshop
+# SpaceTab
+
+기존 **Arc Workshop**의 새 이름입니다. 같은 이름의 Chrome 확장과는 별개의 독립 macOS
+브라우저입니다. 기존 탭·로그인·키체인과 업데이트 연결은 이어집니다. 예전 릴리스의 파일은
+`Arc-Workshop.zip` / `Arc Workshop.app`, 새 다운로드는 `SpaceTab.zip` / `SpaceTab.app`입니다.
+기존 앱을 업데이트하면 Finder의 폴더 이름은 예전 이름으로 남을 수 있지만 앱 안에는 SpaceTab으로 표시됩니다.
 
 **스페이스를 오가던 익숙한 흐름을 이어가는 macOS 브라우저.**
 
-[Mac용 다운로드](https://github.com/hyunchanwi/arc-workshop-updates/releases/latest/download/Arc-Workshop.zip) ·
+[Mac용 다운로드](https://github.com/hyunchanwi/arc-workshop-updates/releases/latest) ·
 [English](README.md) · [사용 안내](docs/guide.md) ·
 [릴리스 기록](https://github.com/hyunchanwi/arc-workshop-updates/releases) ·
 [문제 제보](https://github.com/hyunchanwi/arc-workshop-updates/issues/new/choose)
@@ -11,7 +16,7 @@
 
 *개인 브라우징 정보가 없는 인터페이스 설명용 그림입니다. 실제 화면 캡처가 아닙니다.*
 
-Arc Workshop은 Arc에서 쓰던 스페이스, 즐겨찾기, 고정 탭 중심의 사용 흐름을
+SpaceTab은 Arc에서 쓰던 스페이스, 즐겨찾기, 고정 탭 중심의 사용 흐름을
 이어가기 위해 만든 **Cra 기반의 실험적 개인 포크**입니다. Swift로 만든 네이티브 UI와
 Chromium/CEF 엔진을 사용하며, 자체 저장 공간과 업데이트 경로를 가집니다.
 
@@ -23,7 +28,7 @@ Arc·Dia·The Browser Company와 관계없는 독립 프로젝트입니다. Arc 
 
 **Work**에서 즐겨찾기의 영상을 보다가 **Play**로 옮겨 같은 즐겨찾기를 누르면,
 보던 실제 페이지로 돌아옵니다. Work에 고정한 탭은 Work에 남고, 공통으로 쓰는
-즐겨찾기는 함께 따라옵니다. Arc Workshop에서 가장 중요하게 다루는 흐름입니다.
+즐겨찾기는 함께 따라옵니다. SpaceTab에서 가장 중요하게 다루는 흐름입니다.
 
 처음 1분은 이렇게 시작하세요.
 
@@ -57,8 +62,8 @@ Arc·Dia·The Browser Company와 관계없는 독립 프로젝트입니다. Arc 
 Tidy Tabs는 별도 시스템 조건을 충족해야 합니다.
 
 1. [최신 릴리스](https://github.com/hyunchanwi/arc-workshop-updates/releases/latest)를 엽니다.
-2. **Assets → Arc-Workshop.zip**을 받아 압축을 풉니다.
-3. **Arc Workshop.app**을 **응용 프로그램** 폴더로 옮기고 실행합니다.
+2. **Assets → SpaceTab.zip**을 받아 압축을 풉니다.
+3. **SpaceTab.app**을 **응용 프로그램** 폴더로 옮기고 실행합니다.
 4. 기존 브라우저 구성을 옮기려면 앱의 가져오기 안내를 사용합니다.
 
 현재 개인용 빌드는 **Apple 공증을 받지 않았습니다**. 과거 버전은 임시 개발 서명을
@@ -90,10 +95,10 @@ Tidy Tabs는 별도 시스템 조건을 충족해야 합니다.
 ## 시작하기 전에 궁금한 점
 
 <details>
-<summary>앱 이름이 Cra인가요, Arc Workshop인가요?</summary>
+<summary>앱 이름이 Cra인가요, SpaceTab인가요?</summary>
 
-여기서 배포하는 앱 이름은 **Arc Workshop**입니다. **Cra**는 기반이 된 원본 프로젝트이며,
-앱과 라이선스 안내에 원작자를 표시합니다. 업데이트 경로도 Arc Workshop 전용입니다.
+여기서 배포하는 앱 이름은 **SpaceTab**입니다. **Cra**는 기반이 된 원본 프로젝트이며,
+앱과 라이선스 안내에 원작자를 표시합니다. 업데이트 경로도 SpaceTab 전용입니다.
 
 </details>
 

@@ -148,7 +148,7 @@ def main():
         # Parse/extract the artifact before importing the persistent signing identity.
         # Child tools also never inherit the Actions secret environment variables.
         run("ditto", "-x", "-k", str(args.archive.resolve()), str(directory / "bundle"))
-        app = directory / "bundle/Arc Workshop.app"
+        app = directory / "bundle" / publish.APP_ROOT
         signing_targets(app)
         p12 = directory / "identity.p12"
         p12.write_bytes(base64.b64decode(os.environ["APP_SIGNING_P12"], validate=True))

@@ -102,7 +102,7 @@ def prepare(root, run, force):
     if not re.fullmatch(r"[0-9]+", run):
         raise ValueError("Invalid run number")
     base = git(root, "rev-parse", "HEAD").stdout.strip()
-    git(root, "config", "user.name", "Arc Workshop Maintenance")
+    git(root, "config", "user.name", "SpaceTab Maintenance")
     git(root, "config", "user.email", "maintenance@users.noreply.github.com")
     repo = CONFIG["upstreamRepository"]
     release = get_json(f"https://api.github.com/repos/{repo}/releases/latest")
@@ -154,7 +154,7 @@ def prepare(root, run, force):
         state = {k: plan[k] for k in ["upstream", "engine", "version", "build", "sourceFingerprint", "signingPolicy"]}
         (root / "workshop/last-release.json").write_text(json.dumps(state, indent=2) + "\n")
         git(root, "add", "workshop")
-        git(root, "commit", "--allow-empty", "-m", "Prepare Arc Workshop " + plan["version"])
+        git(root, "commit", "--allow-empty", "-m", "Prepare SpaceTab " + plan["version"])
         plan["candidate"] = git(root, "rev-parse", "HEAD").stdout.strip()
         git(root, "push", "origin", "HEAD:refs/heads/" + plan["branch"])
     return plan

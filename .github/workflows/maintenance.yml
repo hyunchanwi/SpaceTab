@@ -172,7 +172,7 @@ jobs:
           VERSION: ${{ needs.plan.outputs.version }}
         run: |
           python3 scripts/release_notes.py plan.json > "$RUNNER_TEMP/notes.md"
-          gh release create "v$VERSION" dist/* --draft --target main --title "Arc Workshop $VERSION" --notes-file "$RUNNER_TEMP/notes.md"
+          gh release create "v$VERSION" dist/* --draft --target main --title "SpaceTab $VERSION" --notes-file "$RUNNER_TEMP/notes.md"
       - name: Promote tested source
         env:
           SOURCE_DEPLOY_KEY: ${{ secrets.SOURCE_DEPLOY_KEY }}

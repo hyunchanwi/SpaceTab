@@ -1,4 +1,4 @@
-# Using Arc Workshop · 사용 안내
+# Using SpaceTab · 사용 안내
 
 ## Favorites, pinned tabs and profiles
 
@@ -57,7 +57,7 @@ requirement; a locked Keychain or changed certificate can still prompt.
 
 ## Local recovery copies
 
-Before an update proceeds, Arc Workshop copies the old application and browsing profile to:
+Before an update proceeds, SpaceTab copies the old application and browsing profile to:
 
 ```text
 ~/Library/Application Support/Arc Workshop Backups/update-<build>-<id>/
@@ -70,7 +70,7 @@ The profile copy is refreshed after Chromium shuts down. A finished snapshot has
 `snapshot-state` set to `complete`. If preparation fails, the update stops. Snapshots are
 local and are not a cloud backup or an automatic rollback mechanism.
 
-To restore, quit Arc Workshop completely. Preserve the current app and profile separately,
+To restore, quit SpaceTab completely. Preserve the current app and profile separately,
 then restore **both** the app and `profile/` from the same complete snapshot. `profile/`
 replaces `~/Library/Application Support/Arc Workshop`; the old app goes in Applications.
 Keep the existing **Workshop Storage** Keychain item. The older app may need renewed access
@@ -86,4 +86,4 @@ An older browser can have known security bugs, so a rollback is a recovery measu
 
 Use the issue forms with the app version, macOS version and a short reproduction. Do not
 attach a full profile, cookie database, Keychain export or unredacted browsing log.
-The version is visible in About Arc Workshop and in the release's `release.json`.
+The version is visible in About SpaceTab and in the release's `release.json`.

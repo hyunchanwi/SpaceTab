@@ -5,9 +5,9 @@ correct build, try one useful workflow, then find deeper documentation. This is 
 reference material; these projects' code and images were not copied into the page.
 
 Public GitHub repository metadata was checked on **9 November 2026**. Star counts below are
-a dated snapshot, not an endorsement or a claim about Arc Workshop's popularity.
+a dated snapshot, not an endorsement or a claim about SpaceTab's popularity.
 
-| Project | Stars at review | Structure observed | Arc Workshop adaptation |
+| Project | Stars at review | Structure observed | SpaceTab adaptation |
 | --- | ---: | --- | --- |
 | [Ladybird](https://github.com/LadybirdBrowser/ladybird) | 66,946 | A short identity statement, visible development status, separate technical documentation. | Put experimental status and project identity near the top; keep detailed signing setup in a maintainer guide. |
 | [Zen](https://github.com/zen-browser/desktop) | 45,668 | Download, documentation and release-note links immediately under the introduction. | Provide direct ZIP download, language, user guide and release links at the top. |
@@ -16,7 +16,7 @@ a dated snapshot, not an endorsement or a claim about Arc Workshop's popularity.
 | [Min](https://github.com/minbrowser/min) | 9,245 | A short feature list, visual examples, prebuilt installation and a separate getting-started guide. | Add a fictional interface illustration and a one-minute tour, with a dedicated user guide for details. |
 
 [Cra](https://github.com/VictorKildahl/cra) is both the browser's upstream and a further
-reference for explaining spaces, pinned tabs and shortcuts. Arc Workshop's own organizing
+reference for explaining spaces, pinned tabs and shortcuts. SpaceTab's own organizing
 idea is **“Keep the page. Change the space.”** The lead example explains shared favorites
 using a single live page carried between Work and Play, followed by the distinction between
 space-specific pins and profile-scoped favorites.

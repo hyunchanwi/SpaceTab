@@ -15,7 +15,7 @@ class ArchiveSecurityTests(unittest.TestCase):
         data = io.BytesIO()
         with zipfile.ZipFile(data, "w") as archive:
             for name, value, kind in entries:
-                entry = zipfile.ZipInfo("Arc Workshop.app/" + name)
+                entry = zipfile.ZipInfo("SpaceTab.app/" + name)
                 entry.create_system = 3
                 entry.external_attr = (kind | 0o755) << 16
                 archive.writestr(entry, value)
@@ -72,7 +72,7 @@ class ArchiveSecurityTests(unittest.TestCase):
     def test_oversized_manifest_is_rejected_before_parsing(self):
         data = io.BytesIO()
         with zipfile.ZipFile(data, "w") as archive:
-            archive.writestr("Arc Workshop.app/Contents/Info.plist", b"not a property list")
+            archive.writestr("SpaceTab.app/Contents/Info.plist", b"not a property list")
         data.seek(0)
         with patch.object(publish, "MAX_PLIST_BYTES", 3), patch.object(plistlib, "loads") as parse:
             with self.assertRaisesRegex(ValueError, "manifest"):

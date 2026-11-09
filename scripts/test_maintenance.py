@@ -98,6 +98,7 @@ class MaintenanceTests(unittest.TestCase):
         plan = {"version": "1.0.1", "build": "20261109010000"}
         config = publish.CONFIG
         good = {"CFBundleIdentifier": config["bundleID"], "CFBundleVersion": plan["build"],
+                "CFBundleName": config["productName"], "CFBundleDisplayName": config["productName"],
                 "CFBundleShortVersionString": plan["version"], "SUPublicEDKey": config["publicKey"],
                 "SUFeedURL": f'https://github.com/{config["distributionRepository"]}/releases/latest/download/appcast.xml',
                 "SUVerifyUpdateBeforeExtraction": True, "SURequireSignedFeed": True, "LSMinimumSystemVersion": "14.0"}
@@ -105,7 +106,7 @@ class MaintenanceTests(unittest.TestCase):
             archive = Path(temp) / "app.zip"
             def write(info, extra=None):
                 with zipfile.ZipFile(archive, "w") as z:
-                    z.writestr("Arc Workshop.app/Contents/Info.plist", plistlib.dumps(info))
+                    z.writestr("SpaceTab.app/Contents/Info.plist", plistlib.dumps(info))
                     if extra: z.writestr(extra, b"unexpected")
             write(good)
             self.assertEqual(publish.validate(archive, plan), good)
@@ -113,7 +114,7 @@ class MaintenanceTests(unittest.TestCase):
                 bad = dict(good); bad[field] = "wrong"
                 write(bad)
                 with self.assertRaises(ValueError): publish.validate(archive, plan)
-            write(good, "Arc Workshop.app/../../outside")
+            write(good, "SpaceTab.app/../../outside")
             with self.assertRaises(ValueError): publish.validate(archive, plan)
 
 

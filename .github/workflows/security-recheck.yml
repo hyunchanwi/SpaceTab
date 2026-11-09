@@ -48,4 +48,6 @@ jobs:
           CANDIDATE: ${{ inputs.source_commit }}
         run: bash scripts/source.sh checkout "$RUNNER_TEMP/source"
       - name: Verify existing signed artifact with no signing keys or publishing permission
+        env:
+          WORKSHOP_ALLOW_LEGACY_APP_NAME: '1'
         run: bash scripts/verify-signed.sh "$RUNNER_TEMP/source"

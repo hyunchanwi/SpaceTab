@@ -1,4 +1,4 @@
-<h1 align="center">Arc Workshop</h1>
+<h1 align="center">SpaceTab</h1>
 
 <p align="center">
   A familiar home for your spaces.<br>
@@ -6,7 +6,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/hyunchanwi/arc-workshop-updates/releases/latest/download/Arc-Workshop.zip"><strong>Download for Mac</strong></a> ·
+  <a href="https://github.com/hyunchanwi/arc-workshop-updates/releases/latest"><strong>Download for Mac</strong></a> ·
   <a href="README.ko.md">한국어</a> ·
   <a href="docs/guide.md">User guide</a> ·
   <a href="https://github.com/hyunchanwi/arc-workshop-updates/releases">Release notes</a> ·
@@ -23,20 +23,27 @@
 <p align="center"><img src="docs/assets/overview.svg" alt="Illustration of a vertical sidebar, shared favorites and separate Work, Play and Study spaces" width="920"></p>
 <p align="center"><sub>Interface illustration with fictional content; not a screenshot of a browsing profile.</sub></p>
 
-Arc Workshop started with a simple goal: keep the way an Arc user moves between spaces,
+SpaceTab started with a simple goal: keep the way an Arc user moves between spaces,
 favorite sites and everyday tabs. It builds on [Cra](https://github.com/VictorKildahl/cra),
 using a native Swift interface and Chromium through CEF. It has its own application identity,
 storage folder and signed update feed.
 
 **This is an experimental personal fork.** The browser source is private. This repository
-contains public downloads, documentation and maintenance tooling. Arc Workshop is an
+contains public downloads, documentation and maintenance tooling. SpaceTab is an
 independent project and is not affiliated with Arc, Dia or The Browser Company.
+
+Previously named **Arc Workshop**. SpaceTab is this independent macOS browser, not a Chrome
+extension of the same name. The existing update channel and signing identity are retained.
+Older releases use `Arc-Workshop.zip` and `Arc Workshop.app`; new downloads use `SpaceTab.zip`
+and `SpaceTab.app`. An existing installation updated in place may retain its old Finder folder
+name while showing SpaceTab in the app. Your profile and Keychain storage stay in their
+existing locations.
 
 ## Keep the page. Change the space.
 
 Open a favorite video in **Work**, switch to **Play**, and choose the same favorite.
 You return to the same live page. Your pinned Work tabs stay in Work; your shared favorites
-come along. That distinction is the heart of Arc Workshop.
+come along. That distinction is the heart of SpaceTab.
 
 Try it in a minute:
 
@@ -70,8 +77,8 @@ account services are not provided.
 not currently publish Intel, Windows or Linux builds. Tidy Tabs has additional requirements.
 
 1. Open the [latest release](https://github.com/hyunchanwi/arc-workshop-updates/releases/latest).
-2. Download **Arc-Workshop.zip** from **Assets** and unzip it.
-3. Move **Arc Workshop.app** to **Applications**, then open it.
+2. Download **SpaceTab.zip** from **Assets** and unzip it.
+3. Move **SpaceTab.app** to **Applications**, then open it.
 4. Use the import prompt to bring over your existing browser organization if desired.
 
 Current personal builds are **not Apple notarized**. Older releases use ad-hoc signing;
@@ -81,7 +88,7 @@ A personal certificate does not establish Apple Developer ID trust. macOS may bl
 initial download; Apple's [instructions for opening an app from an unidentified developer](https://support.apple.com/guide/mac-help/open-a-mac-app-from-an-unknown-developer-mh40616/mac)
 explain the per-app decision. No system-wide security changes are needed by this project.
 
-If macOS asks Arc Workshop to access **Workshop Storage**, that is its local Keychain
+If macOS asks SpaceTab to access **Workshop Storage**, that is its local Keychain
 encryption key. Enter your Mac password only in the macOS dialog. Moving from an ad-hoc
 build to the persistent identity may require approval once. A locked Keychain, certificate
 change or access-policy change can still cause a later prompt.
@@ -129,9 +136,9 @@ does not replace that protection. Compatible patched engine availability can del
 security updates. See [security scope and release checks](SECURITY.md).
 
 <details>
-<summary>Is the app called Cra or Arc Workshop?</summary>
+<summary>Is the app called Cra or SpaceTab?</summary>
 
-The app distributed here is **Arc Workshop**. **Cra** is its upstream foundation and receives
+The app distributed here is **SpaceTab**. **Cra** is its upstream foundation and receives
 credit in the app and license notices. This is an independent fork with its own update channel.
 
 </details>
@@ -147,8 +154,8 @@ profile share site login storage and, when enabled, favorites.
 <details>
 <summary>Does normal browsing depend on Arc being installed?</summary>
 
-No. Arc Workshop has its own Chromium/CEF engine and local browsing profile. Importing Arc
-data needs the data to be available locally; normal browsing uses Arc Workshop's own engine.
+No. SpaceTab has its own Chromium/CEF engine and local browsing profile. Importing Arc
+data needs the data to be available locally; normal browsing uses SpaceTab's own engine.
 Arc's cloud services are not part of this app.
 
 </details>
@@ -182,7 +189,7 @@ Report reproducible problems through [Issues](https://github.com/hyunchanwi/arc-
 Include the app version, macOS version and steps, with personal URLs and account details
 removed. See [SECURITY.md](SECURITY.md) for sensitive reports.
 
-Arc Workshop builds on [Victor Kildahl's Cra](https://github.com/VictorKildahl/cra),
+SpaceTab builds on [Victor Kildahl's Cra](https://github.com/VictorKildahl/cra),
 [Chromium / CEF](https://bitbucket.org/chromiumembedded/cef), and
 [Sparkle](https://sparkle-project.org). Upstream licenses and notices are included in the
 app. Public maintenance tooling is MIT licensed; see [LICENSE](LICENSE) and

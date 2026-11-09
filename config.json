@@ -3,5 +3,8 @@
   "distributionRepository": "hyunchanwi/arc-workshop-updates",
   "upstreamRepository": "VictorKildahl/cra",
   "bundleID": "local.hyunchan.arcworkshop",
+  "productName": "SpaceTab",
+  "archiveName": "SpaceTab.zip",
+  "legacyArchiveName": "Arc-Workshop.zip",
   "publicKey": "d8UkE8J3kWIvfiLCFw1hKLsRDRfJ6pGGZmZQFdum+zA="
 }

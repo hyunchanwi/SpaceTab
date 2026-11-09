@@ -7,7 +7,7 @@ The browser includes third-party software whose licenses remain applicable:
 - **Chromium Embedded Framework / Chromium**: the bundled engine license and component notices are included in the app's license resources and framework. [CEF project](https://bitbucket.org/chromiumembedded/cef).
 - **Sparkle**: its license is included at `Contents/Resources/Licenses/Sparkle.txt`. [Sparkle project](https://sparkle-project.org).
 
-Arc and Dia are associated with The Browser Company. Arc Workshop is an independent project;
+Arc and Dia are associated with The Browser Company. SpaceTab is an independent project;
 no affiliation, endorsement or compatibility guarantee is implied. The overview illustration
 uses fictional content and contains no user browsing information.
 
@@ -16,4 +16,4 @@ The public README organization was informed by the upstream
 [Zen](https://github.com/zen-browser/desktop), [Min](https://github.com/minbrowser/min),
 [Ladybird](https://github.com/LadybirdBrowser/ladybird) and
 [Rectangle](https://github.com/rxhanson/Rectangle) project pages. Descriptions and artwork
-here were written for Arc Workshop. See the [dated presentation notes](docs/presentation-notes.md).
+here were written for SpaceTab. See the [dated presentation notes](docs/presentation-notes.md).

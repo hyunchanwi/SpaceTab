@@ -1,6 +1,6 @@
 # Update architecture
 
-Arc Workshop uses two independent signatures:
+SpaceTab uses two independent signatures:
 
 | Check | Purpose |
 | --- | --- |
@@ -35,7 +35,8 @@ stock, incompatible engine or block an otherwise tested application security fix
 
 | File | Purpose |
 | --- | --- |
-| `Arc-Workshop.zip` | Application to move into Applications. |
+| `SpaceTab.zip` | Application to move into Applications. |
+| `Arc-Workshop.zip` | Compatibility download alias containing the same signed bytes as SpaceTab.zip. |
 | `appcast.xml` | Signed update feed used by Sparkle. |
 | `release.json` | Public app/build and engine metadata, including signing status for new releases. |
 | `signing-status.json` | Signing mode, public certificate fingerprint and notarization status for new releases. |
