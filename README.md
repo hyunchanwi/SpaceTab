@@ -1,3 +1,5 @@
+<p align="center"><img src="docs/assets/spacetab-icon.png" alt="SpaceTab app icon" width="112"></p>
+
 <h1 align="center">SpaceTab</h1>
 
 <p align="center">
@@ -50,6 +52,7 @@ Try it in a minute:
 | --- | --- |
 | Spaces | Separate pinned tabs, folders and everyday tabs. Switch from the sidebar or use `⌃1`–`⌃9`. |
 | Shared favorites | Spaces in the same login profile use the same live favorite tab. A page stays where you left it. Enabled by default. |
+| App icons | Ice Blue is the default. Choose Mint Orbit, Graphite, Portal or your own image in Settings → General → App Icon. |
 | Quiet sidebar | Vertical tabs without a conventional top tab strip. `⌘S` shows or hides the sidebar; edge reveal is supported. |
 | Pinned tabs and folders | Keep regular sites organized independently in each space. |
 | Tidy Tabs | Group everyday tabs using the Mac's on-device Apple Intelligence model. Requires macOS 26+ and an available model. |
@@ -179,6 +182,19 @@ That is not an intended update step. A persistent certificate keeps the app's si
 identity stable. The first transition from an ad-hoc build can need Keychain approval,
 and a locked Keychain or changed certificate can still prompt. Personal signing does not
 provide Apple notarization.
+
+</details>
+
+<details>
+<summary>Can I use SpaceTab on another Mac or a Mac mini?</summary>
+
+Yes, on an Apple silicon Mac (M1 or later) running macOS 14 or later. Download the
+same SpaceTab.zip; the published build does not support Intel Macs. Installation
+starts with that Mac’s own browsing data. Settings → General → Sync → Export / Import
+can transfer spaces, favorites, pinned tabs, settings and shortcuts. A shared-folder
+provider can keep these in sync. Direct iCloud app sync is unavailable in this personal
+build. Logins, cookies, history, extensions, app-icon preferences and the personal
+Safe Browsing key stay on each Mac.
 
 </details>
 
