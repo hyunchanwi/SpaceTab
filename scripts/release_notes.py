@@ -14,6 +14,8 @@ print("Download **SpaceTab.zip**, unzip it, and move **SpaceTab.app** to Applica
 print("### In this release\n")
 print("- Arc Workshop is now **SpaceTab**. Existing profiles, Keychain identity and update verification keys are retained.")
 print("- New downloads contain **SpaceTab.app**. An in-place update may keep the existing Finder folder name; the app displays SpaceTab.")
+print("- **Expand Current Split** shows the chosen pane alone and keeps the other pages as sidebar tabs. Find it in View, the command bar, or a pane's options.")
+print("- Pinned tabs and favorites group their saved-address actions under **Edit Pinned Page**.")
 print("- Automated browser tests and isolated launch, quit and restore checks passed.")
 print("- Imported extension IDs are validated before filesystem access; release archives have stricter path, symlink and size checks.")
 print("- Disposable-key update tampering checks and real-browser isolation/TLS checks passed before publication.")
