@@ -14,7 +14,7 @@ SpaceTab uses two independent signatures:
 3. **Sign:** validate the artifact bundle identifier, version, feed URL, update key and ZIP paths. Import the pinned app-signing identity into a temporary Keychain. Sign nested code from the inside out, then verify strictly. The browser is never run in the signing job.
 4. **Notarize, when configured:** Developer ID mode additionally requires Apple notarization, ticket stapling and Gatekeeper assessment. Personal mode never claims notarization.
 5. **Verify signed app:** on a fresh runner without app/update signing credentials or release-write permission, validate the final certificate and run isolated launch, quit, restore and browser origin/profile/TLS boundary checks on the signed app.
-6. **Publish:** sign the final ZIP and appcast with the dedicated Sparkle key, upload a draft, promote the tested source, then make the release public. A failed prerequisite stops publication.
+6. **Publish:** sign the final ZIP and appcast with the dedicated Sparkle key, upload a draft, promote the tested source, then make the release public. A failed prerequisite stops publication. After publication, send the already-public signed appcast to the release-signal service.
 7. **Install:** the app verifies updates, prepares a local app/profile snapshot, and installs after the user chooses. The profile snapshot is refreshed on clean Chromium shutdown.
 
 Source changes, engine changes and signing-policy changes trigger a build. Documentation
@@ -30,6 +30,21 @@ Engine freshness is checked against both stable CEF availability and Google's ma
 Chrome version history. `release.json` includes `latestStableChrome` when available. A lag
 or failed freshness lookup raises maintenance attention; it does not silently substitute a
 stock, incompatible engine or block an otherwise tested application security fix.
+
+## Release events
+
+Connected applications receive a small version/build hint from the dedicated Cloudflare
+Worker. The service accepts only appcasts signed by the existing update key; it stores the
+latest hint and rejects unsigned, modified and older announcements. A hint can request only
+a normal Sparkle check: it supplies no installation command or download URL to the app.
+Sparkle still verifies the signed feed and archive. No additional publishing secret is used.
+
+The client sends no tabs, profile contents, cookies or device identifier. Cloudflare handles
+the connection and its ordinary network metadata. Sleep/network loss triggers reconnection,
+and the latest hint is delivered when it reconnects. A busy updater retains the pending hint;
+checks are rate-limited and bounded retries cover a briefly stale GitHub feed. Periodic and
+manual checks remain available if signal delivery fails. Event delivery is not guaranteed
+within a particular number of seconds.
 
 ## Public release files
 

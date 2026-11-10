@@ -114,9 +114,11 @@ flowchart LR
     C --> D[Install and reopen]
 ```
 
-Maintenance checks roughly every six hours; installed copies check about every eight hours.
-These are scheduled checks, not a promise of delivery by a deadline. Only changed source,
-engine or signing policy triggers a new build. Installation requires your action by default.
+Maintenance checks roughly every six hours. New releases also send an event to connected
+copies, requesting a normal signed-feed check. Offline copies catch up on reconnection;
+eight-hour and manual checks remain as fallbacks. Delivery has no deadline guarantee.
+Only changed source, engine or signing policy triggers a new build. Installation requires
+your action by default.
 
 Updates stop if integration conflicts, tests fail, the app identity changes unexpectedly,
 or signing credentials are missing. Engine updates use compatible, checksummed binaries
@@ -131,9 +133,11 @@ without executing the browser. See [update architecture](docs/updates.md) and th
 
 ## Questions before you try it
 
-This build currently lacks Google Safe Browsing phishing and malware warnings. Ad blocking
-does not replace that protection. Compatible patched engine availability can delay Chromium
-security updates. See [security scope and release checks](SECURITY.md).
+From 1.0.21, Google Safe Browsing can be configured with your own API key in Settings →
+Privacy. No shared key is included: protection needs setup and a successful threat-list
+download. This engine's list refresh interval is at least 24 hours, and compatible patched
+engine availability can delay Chromium security updates. Ad blocking is separate. See
+[setup and limits](docs/guide.md#dangerous-site-protection) and [security scope](SECURITY.md).
 
 <details>
 <summary>Is the app called Cra or SpaceTab?</summary>

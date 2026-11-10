@@ -14,9 +14,17 @@ substitute for timely security updates.
 
 ## Current protection limits
 
-The Cra-based engine does not currently provide Google Safe Browsing warnings for known
-phishing or malware sites. Ad blocking does not replace URL/download reputation checks.
-Chromium renderer sandboxing and signed updates address different boundaries.
+From 1.0.21, Google Safe Browsing is configurable with a user's own API key, stored in that
+Mac's Keychain. No personal key is distributed in the app. Without configuration and a
+successful threat-list download, do not assume phishing/malware warnings are active.
+An isolated Mac test with a restricted personal key downloaded the lists and displayed
+Chromium's warning for Google's official synthetic malware URL; that verifies the tested
+path, not every site or every installation.
+
+The current patched engine waits at least 24 hours between successful list updates.
+This does not promise Chrome-equivalent coverage or freshness. Ad blocking is separate;
+renderer sandboxing and signed updates address different boundaries. Follow the
+[setup guide](docs/guide.md#dangerous-site-protection) and check protection after setup.
 
 Maintenance compares our compatible patched CEF build with both available stable CEF and
 Google's macOS stable Chrome versions. A newer Chrome version can exist before a compatible
