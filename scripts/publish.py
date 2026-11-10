@@ -127,7 +127,7 @@ def validate(archive, plan, allow_legacy_app_name=False):
                     "CFBundleName": product_name, "CFBundleDisplayName": product_name,
                     "CFBundleShortVersionString": plan["version"], "SUPublicEDKey": CONFIG["publicKey"],
                     "SUFeedURL": feed, "SUVerifyUpdateBeforeExtraction": True, "SURequireSignedFeed": True}
-        if any(info.get(k) != v for k, v in expected.items()) or "LSEnvironment" in info:
+        if any(info.get(k) != v for k, v in expected.items()) or "LSEnvironment" in info or "CraGoogleAPIKey" in info:
             raise ValueError("Release identity/update trust configuration mismatch")
         return info
 

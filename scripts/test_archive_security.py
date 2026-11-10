@@ -79,6 +79,25 @@ class ArchiveSecurityTests(unittest.TestCase):
                 publish.validate(data, {})
             parse.assert_not_called()
 
+    def test_personal_google_key_must_not_be_distributed(self):
+        plan = {"build": "20261110000000", "version": "1.0.18"}
+        info = dict(CFBundleIdentifier=publish.CONFIG["bundleID"], CFBundleVersion=plan["build"],
+                    CFBundleName="SpaceTab", CFBundleDisplayName="SpaceTab", CFBundleShortVersionString=plan["version"],
+                    SUPublicEDKey=publish.CONFIG["publicKey"], SUVerifyUpdateBeforeExtraction=True, SURequireSignedFeed=True,
+                    SUFeedURL=f'https://github.com/{publish.CONFIG["distributionRepository"]}/releases/latest/download/appcast.xml')
+        for embedded in [False, True]:
+            candidate = dict(info)
+            if embedded: candidate["CraGoogleAPIKey"] = "synthetic-key-must-not-ship"
+            data = io.BytesIO()
+            with zipfile.ZipFile(data, "w") as archive:
+                archive.writestr("SpaceTab.app/Contents/Info.plist", plistlib.dumps(candidate))
+            data.seek(0)
+            if embedded:
+                with self.assertRaisesRegex(ValueError, "trust configuration"):
+                    publish.validate(data, plan)
+            else:
+                self.assertEqual(publish.validate(data, plan), info)
+
 
 if __name__ == "__main__":
     unittest.main()

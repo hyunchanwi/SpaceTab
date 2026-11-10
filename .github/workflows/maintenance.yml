@@ -37,6 +37,7 @@ jobs:
           python3 scripts/test_maintenance.py
           python3 scripts/test_signing.py
           python3 scripts/test_archive_security.py
+          python3 scripts/test_notify_release.py
       - name: Plan source and engine update
         id: plan
         env:
@@ -184,6 +185,9 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ needs.plan.outputs.version }}
         run: gh release edit "v$VERSION" --draft=false --latest
+      - name: Notify installed browsers of the published signed release
+        continue-on-error: true
+        run: python3 scripts/notify_release.py
 
   attention:
     needs: [plan, build, sign, verify-signed, publish]
