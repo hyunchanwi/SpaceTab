@@ -200,6 +200,13 @@ Safe Browsing key stay on each Mac.
 
 ## Your data
 
+SpaceTab intentionally keeps the internal names **Arc Workshop**, **Arc Workshop Backups**
+and **Workshop Storage** for compatibility. These are SpaceTab’s own data folders and
+Keychain service, including on a new installation. Keeping them unchanged lets existing
+profiles, encrypted logins and recovery tools continue using the same locations and key.
+The public app name is **SpaceTab**; renaming these internal identifiers would require
+a separate, tested data migration. Leave the folders and Keychain item under their current names.
+
 Browsing data lives in `~/Library/Application Support/Arc Workshop`.
 Update snapshots live in `~/Library/Application Support/Arc Workshop Backups` and can
 contain your full browsing profile. They stay on your Mac and are not uploaded as releases.

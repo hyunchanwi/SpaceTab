@@ -173,6 +173,12 @@ Intel Mac은 현재 배포본에서 지원하지 않습니다. 설치만으로 �
 엔진 보안 업데이트도 호환 바이너리 공급에 영향을 받습니다.
 현재 보안 범위와 검사 항목은 [SECURITY.md](SECURITY.md)에 정리합니다.
 
+앱 이름은 **SpaceTab**이지만 내부 폴더 이름인 **Arc Workshop**, **Arc Workshop Backups**와
+키체인 이름 **Workshop Storage**는 호환성을 위해 유지합니다. 새로 설치한 Mac에서도
+같은 내부 이름을 사용합니다. 모두 SpaceTab 자체의 저장 공간이며, 기존 프로필·로그인
+암호화 키·복구 도구가 같은 경로와 키를 계속 사용하도록 한 것입니다. 이 이름까지 바꾸려면
+별도로 검증한 데이터 이전 절차가 필요하므로 폴더와 키체인 항목은 현재 이름으로 유지하세요.
+
 브라우징 데이터는 `~/Library/Application Support/Arc Workshop`, 업데이트 전 복사본은
 `~/Library/Application Support/Arc Workshop Backups`에 보관합니다. 복사본에는 전체
 브라우징 프로필이 들어갈 수 있으므로 개인 데이터로 취급하세요. 자동으로 업로드하지 않습니다.
