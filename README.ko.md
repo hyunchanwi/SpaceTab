@@ -1,16 +1,13 @@
 # SpaceTab
 
-기존 **Arc Workshop**의 새 이름입니다. 같은 이름의 Chrome 확장과는 별개의 독립 macOS
-브라우저입니다. 기존 탭·로그인·키체인과 업데이트 연결은 이어집니다. 예전 릴리스의 파일은
-`Arc-Workshop.zip` / `Arc Workshop.app`, 새 다운로드는 `SpaceTab.zip` / `SpaceTab.app`입니다.
-기존 앱을 업데이트하면 Finder의 폴더 이름은 예전 이름으로 남을 수 있지만 앱 안에는 SpaceTab으로 표시됩니다.
+스페이스·공유 즐겨찾기·세로 사이드바를 중심으로 만든 독립 macOS 브라우저입니다.
 
 **스페이스를 오가던 익숙한 흐름을 이어가는 macOS 브라우저.**
 
-[Mac용 다운로드](https://github.com/hyunchanwi/arc-workshop-updates/releases/latest) ·
+[Mac용 다운로드](https://github.com/hyunchanwi/SpaceTab/releases/latest) ·
 [English](README.md) · [사용 안내](docs/guide.md) ·
-[릴리스 기록](https://github.com/hyunchanwi/arc-workshop-updates/releases) ·
-[문제 제보](https://github.com/hyunchanwi/arc-workshop-updates/issues/new/choose)
+[릴리스 기록](https://github.com/hyunchanwi/SpaceTab/releases) ·
+[문제 제보](https://github.com/hyunchanwi/SpaceTab/issues/new/choose)
 
 ![스페이스·공유 즐겨찾기·세로 사이드바 구성 예시](docs/assets/overview.svg)
 
@@ -61,7 +58,7 @@ Arc·Dia·The Browser Company와 관계없는 독립 프로젝트입니다. Arc 
 현재 이 저장소에서는 Intel Mac·Windows·Linux 설치 파일을 배포하지 않습니다.
 Tidy Tabs는 별도 시스템 조건을 충족해야 합니다.
 
-1. [최신 릴리스](https://github.com/hyunchanwi/arc-workshop-updates/releases/latest)를 엽니다.
+1. [최신 릴리스](https://github.com/hyunchanwi/SpaceTab/releases/latest)를 엽니다.
 2. **Assets → SpaceTab.zip**을 받아 압축을 풉니다.
 3. **SpaceTab.app**을 **응용 프로그램** 폴더로 옮기고 실행합니다.
 4. 기존 브라우저 구성을 옮기려면 앱의 가져오기 안내를 사용합니다.
@@ -79,6 +76,19 @@ Tidy Tabs는 별도 시스템 조건을 충족해야 합니다.
 접근하는 승인입니다. Mac 암호는 macOS 창에만 입력하세요. 임시 서명에서 지속 서명으로
 바뀔 때 한 번 더 승인할 수 있습니다. 키체인이 잠기거나 인증서·접근 정책이 바뀌면
 나중에 다시 물을 수 있으므로 암호 창이 절대 뜨지 않는다는 보장은 아닙니다.
+
+<details>
+<summary>예전 버전에서 업데이트하는 경우</summary>
+
+기존 **Arc Workshop**의 새 이름입니다. 같은 이름의 Chrome 확장과는 별개의 독립 macOS
+브라우저입니다. 기존 탭·로그인·키체인과 업데이트 연결은 이어집니다. 예전 릴리스의 파일은
+`Arc-Workshop.zip` / `Arc Workshop.app`, 새 다운로드는 `SpaceTab.zip` / `SpaceTab.app`입니다.
+기존 앱을 업데이트하면 Finder의 폴더 이름은 예전 이름으로 남을 수 있지만 앱 안에는 SpaceTab으로 표시됩니다.
+
+공개 저장소 이름은 `hyunchanwi/SpaceTab`입니다. 기존 앱에 들어 있는 서명된 업데이트
+주소는 호환성을 위해 유지하며 새 저장소로 연결됩니다.
+
+</details>
 
 ## 이렇게 사용하세요
 
@@ -162,7 +172,7 @@ Tidy의 탭 묶기는 Mac 안의 모델을 사용합니다.
 
 ## 피드백과 기반 프로젝트
 
-[문제 제보](https://github.com/hyunchanwi/arc-workshop-updates/issues/new/choose)에는
+[문제 제보](https://github.com/hyunchanwi/SpaceTab/issues/new/choose)에는
 앱·macOS 버전과 재현 방법을 적고 개인 URL·계정 정보를 지워 주세요.
 민감한 보안 문제는 [SECURITY.md](SECURITY.md)를 참고하세요.
 

@@ -34,5 +34,5 @@ if plan.get("engineBuildNeeded"):
         print("- Engine freshness could not be confirmed; this release keeps the tested, compatible patched engine shown above.")
 print("\n### Update and recovery\n")
 print("Installed copies check for signed updates. Installation requires your action by default. Before updating, the app saves the previous app and browsing profile locally; recovery is manual.\n")
-print("[Getting started](https://github.com/hyunchanwi/arc-workshop-updates#install) · [한국어 안내](https://github.com/hyunchanwi/arc-workshop-updates/blob/main/README.ko.md) · [Report a bug](https://github.com/hyunchanwi/arc-workshop-updates/issues/new/choose)\n")
+print("[Getting started](https://github.com/hyunchanwi/SpaceTab#install) · [한국어 안내](https://github.com/hyunchanwi/SpaceTab/blob/main/README.ko.md) · [Report a bug](https://github.com/hyunchanwi/SpaceTab/issues/new/choose)\n")
 print("An independent Cra-based project. Not affiliated with Arc, Dia or The Browser Company. Browser source is private; this public repository contains downloads and maintenance tooling.")

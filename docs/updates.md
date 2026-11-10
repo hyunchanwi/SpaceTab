@@ -70,3 +70,13 @@ in `signing.json`; it is public verification material, not a private key.
 - Changes to the signing identity need an explicit review and can cause another Keychain prompt. There is no silent fallback to ad-hoc signing.
 
 See [signing setup](signing.md) and [GitHub's schedule policy](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/disable-and-enable-workflows).
+
+## Repository name and compatibility addresses
+
+The public repository is `hyunchanwi/SpaceTab`. The original
+`hyunchanwi/arc-workshop-updates` path remains the signed update delivery address:
+GitHub redirects it to the same repository. The controller, relay and installed clients
+keep that exact allowlisted address, so published signed feeds are not rewritten.
+Do not create a new repository at the original path: that would remove its redirect.
+The bundle ID, storage folders, Keychain service, certificates and update signing key
+are independent of this display-name change and remain unchanged.

@@ -6,15 +6,15 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/hyunchanwi/arc-workshop-updates/releases/latest"><strong>Download for Mac</strong></a> ·
+  <a href="https://github.com/hyunchanwi/SpaceTab/releases/latest"><strong>Download for Mac</strong></a> ·
   <a href="README.ko.md">한국어</a> ·
   <a href="docs/guide.md">User guide</a> ·
-  <a href="https://github.com/hyunchanwi/arc-workshop-updates/releases">Release notes</a> ·
-  <a href="https://github.com/hyunchanwi/arc-workshop-updates/issues/new/choose">Feedback</a>
+  <a href="https://github.com/hyunchanwi/SpaceTab/releases">Release notes</a> ·
+  <a href="https://github.com/hyunchanwi/SpaceTab/issues/new/choose">Feedback</a>
 </p>
 
 <p align="center">
-  <a href="https://github.com/hyunchanwi/arc-workshop-updates/releases/latest"><img src="https://img.shields.io/github/v/release/hyunchanwi/arc-workshop-updates?label=download" alt="Latest release"></a>
+  <a href="https://github.com/hyunchanwi/SpaceTab/releases/latest"><img src="https://img.shields.io/github/v/release/hyunchanwi/SpaceTab?label=download" alt="Latest release"></a>
   <img src="https://img.shields.io/badge/macOS-14%2B-313b52" alt="macOS 14 or later">
   <img src="https://img.shields.io/badge/architecture-Apple%20silicon-313b52" alt="Apple silicon">
   <img src="https://img.shields.io/badge/status-experimental-c79a43" alt="Experimental">
@@ -31,13 +31,6 @@ storage folder and signed update feed.
 **This is an experimental personal fork.** The browser source is private. This repository
 contains public downloads, documentation and maintenance tooling. SpaceTab is an
 independent project and is not affiliated with Arc, Dia or The Browser Company.
-
-Previously named **Arc Workshop**. SpaceTab is this independent macOS browser, not a Chrome
-extension of the same name. The existing update channel and signing identity are retained.
-Older releases use `Arc-Workshop.zip` and `Arc Workshop.app`; new downloads use `SpaceTab.zip`
-and `SpaceTab.app`. An existing installation updated in place may retain its old Finder folder
-name while showing SpaceTab in the app. Your profile and Keychain storage stay in their
-existing locations.
 
 ## Keep the page. Change the space.
 
@@ -76,7 +69,7 @@ account services are not provided.
 **Requirements:** Apple silicon Mac (M1 or later), macOS 14 or later. This repository does
 not currently publish Intel, Windows or Linux builds. Tidy Tabs has additional requirements.
 
-1. Open the [latest release](https://github.com/hyunchanwi/arc-workshop-updates/releases/latest).
+1. Open the [latest release](https://github.com/hyunchanwi/SpaceTab/releases/latest).
 2. Download **SpaceTab.zip** from **Assets** and unzip it.
 3. Move **SpaceTab.app** to **Applications**, then open it.
 4. Use the import prompt to bring over your existing browser organization if desired.
@@ -92,6 +85,21 @@ If macOS asks SpaceTab to access **Workshop Storage**, that is its local Keychai
 encryption key. Enter your Mac password only in the macOS dialog. Moving from an ad-hoc
 build to the persistent identity may require approval once. A locked Keychain, certificate
 change or access-policy change can still cause a later prompt.
+
+<details>
+<summary>Upgrading an older installation</summary>
+
+Previously named **Arc Workshop**. SpaceTab is this independent macOS browser, not a Chrome
+extension of the same name. The existing update channel and signing identity are retained.
+Older releases use `Arc-Workshop.zip` and `Arc Workshop.app`; new downloads use `SpaceTab.zip`
+and `SpaceTab.app`. An existing installation updated in place may retain its old Finder folder
+name while showing SpaceTab in the app. Your profile and Keychain storage stay in their
+existing locations.
+
+The public repository is now `hyunchanwi/SpaceTab`. Existing signed update addresses
+keep their original paths for compatibility and redirect to this repository.
+
+</details>
 
 ## Useful keys
 
@@ -189,7 +197,7 @@ including GitHub for update checks. Local Tidy grouping uses Apple's on-device m
 
 ## Feedback and credits
 
-Report reproducible problems through [Issues](https://github.com/hyunchanwi/arc-workshop-updates/issues/new/choose).
+Report reproducible problems through [Issues](https://github.com/hyunchanwi/SpaceTab/issues/new/choose).
 Include the app version, macOS version and steps, with personal URLs and account details
 removed. See [SECURITY.md](SECURITY.md) for sensitive reports.
 
