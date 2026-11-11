@@ -11,6 +11,10 @@ on:
         description: Reviewed private source commit containing the security harness (40 hex characters)
         required: true
         type: string
+      arc_workflows:
+        description: Check Easel, Boosts, Peek, Little Windows, sidebar and split workflows
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -50,4 +54,5 @@ jobs:
       - name: Verify existing signed artifact with no signing keys or publishing permission
         env:
           WORKSHOP_ALLOW_LEGACY_APP_NAME: '1'
+          WORKSHOP_VERIFY_ARC_WORKFLOWS: ${{ inputs.arc_workflows && '1' || '0' }}
         run: bash scripts/verify-signed.sh "$RUNNER_TEMP/source"

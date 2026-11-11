@@ -27,6 +27,28 @@ APP="$STAGE/$(cat "$STAGE/app-root")"
 codesign --verify --deep --strict "$APP"
 CERT_SHA1=$(openssl x509 -inform DER -in signing/app-signing.cer -noout -fingerprint -sha1 | cut -d= -f2 | tr -d ':')
 codesign --verify -R "=certificate leaf = H\"$CERT_SHA1\"" "$APP"
+if [ "${WORKSHOP_VERIFY_ARC_WORKFLOWS:-0}" = 1 ]; then
+  [ "${GITHUB_ACTIONS:-}" = true ]
+  scenario_status=0
+  for scenario in easel boosts peek-per-tab little-window-route arc-parity-actions link-option-click-split; do
+    if (cd "$SOURCE" && GITHUB_STEP_SUMMARY= CRA_APP="$APP" CRA_BUDGETS=report bash scripts/scenario.sh "$scenario") > "$LOG" 2>&1 \
+      && grep -Fxq "$scenario: passed" "$LOG"; then
+      echo "Arc workflow: $scenario passed"
+    else
+      echo "Arc workflow: $scenario failed"
+      # The scenario's logs can include private source text. Report a stable identifier only.
+      python3 - "$LOG" <<'PY'
+import hashlib, pathlib, sys
+for line in pathlib.Path(sys.argv[1]).read_text(errors='replace').splitlines():
+    if line.startswith('  ✗ '):
+        print('Arc workflow failure fingerprint:', hashlib.sha256(line.encode()).hexdigest()[:12])
+        break
+PY
+      scenario_status=1
+    fi
+  done
+  exit "$scenario_status"
+fi
 if ! (cd "$SOURCE" && bash Tests/smoke-launch.sh "$APP") > "$LOG" 2>&1; then
   echo 'Final signed app launch/restore check failed; no update will be published.'
   exit 1
