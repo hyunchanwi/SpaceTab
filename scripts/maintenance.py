@@ -53,19 +53,28 @@ def git(root, *args, allow_failure=False):
 def choose_engine(current, desired, releases):
     """Only official codec-enabled, checksummed arm64 binaries may be shipped."""
     options = [current]
-    for candidate in desired:
-        if version(candidate) < version(current["version"]):
+    stable_bases = {candidate.split("+", 1)[0] for candidate in desired}
+    full_version = r"[0-9]+\.[0-9]+\.[0-9]+\+g[0-9a-f]+\+chromium-[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+"
+    archive_name = "cef_binary_macosarm64_minimal.tar.bz2"
+    for release in releases:
+        tag = release.get("tag_name") or ""
+        tag_match = re.fullmatch(r"cef-([0-9]+\.[0-9]+\.[0-9]+)-codecs[0-9]+", tag)
+        if release.get("draft") or not tag_match or tag_match[1] not in stable_bases:
             continue
-        base = candidate.split("+", 1)[0]
-        for release in releases:
-            if release.get("draft") or not re.fullmatch(r"cef-" + re.escape(base) + r"-codecs[0-9]+", release["tag_name"]):
-                continue
-            for asset in release.get("assets", []):
-                digest = asset.get("digest") or ""
-                url = asset.get("browser_download_url", "")
-                prefix = f'https://github.com/{CONFIG["upstreamRepository"]}/releases/download/{release["tag_name"]}/'
-                if asset["name"] == "cef_binary_macosarm64_minimal.tar.bz2" and re.fullmatch(r"sha256:[a-f0-9]{64}", digest) and url.startswith(prefix):
-                    options.append({"version": candidate, "url": url, "sha256": digest[7:]})
+        # A patched build can bundle a newer Chromium patch than the stock CEF
+        # index. Its full version determines the archive root and the release record.
+        published = set(re.findall(full_version, release.get("body") or ""))
+        if len(published) != 1:
+            continue
+        actual = published.pop()
+        if actual.split("+", 1)[0] != tag_match[1] or version(actual) < version(current["version"]):
+            continue
+        expected_url = f'https://github.com/{CONFIG["upstreamRepository"]}/releases/download/{tag}/{archive_name}'
+        for asset in release.get("assets", []):
+            digest = asset.get("digest") or ""
+            url = asset.get("browser_download_url", "")
+            if asset.get("name") == archive_name and re.fullmatch(r"sha256:[a-f0-9]{64}", digest) and url == expected_url:
+                options.append({"version": actual, "url": url, "sha256": digest[7:]})
     def rank(engine):
         codec = re.search(r"-codecs([0-9]+)/", engine["url"])
         return version(engine["version"]), int(codec[1]) if codec else 0
@@ -120,7 +129,7 @@ def prepare(root, run, force):
     stable = [v["cef_version"] for v in get_json("https://cef-builds.spotifycdn.com/index.json")["macosarm64"]["versions"] if v["channel"] == "stable"]
     latest = max(stable, key=version)
     releases = get_json(f"https://api.github.com/repos/{repo}/releases?per_page=100")
-    engine = choose_engine(current, [match[1], latest], releases)
+    engine = choose_engine(current, [match[1], *stable], releases)
     try:
         chrome = get_json("https://versionhistory.googleapis.com/v1/chrome/platforms/mac/channels/stable/versions?pageSize=3")
     except (urllib.error.URLError, TimeoutError, ValueError):

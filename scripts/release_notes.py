@@ -12,6 +12,7 @@ print("A native macOS browser built around spaces, a quiet sidebar and shared fa
 print("### Install\n")
 print("Download **SpaceTab.zip**, unzip it, and move **SpaceTab.app** to Applications. Apple silicon; macOS 14 or later.\n")
 print("### In this release\n")
+print("- Engine maintenance now uses the version published with the patched CEF package, fixing an archive folder mismatch that blocked automatic builds.")
 print("- A new **Ice Blue** icon is the default for SpaceTab, including Finder and notification helpers.")
 print("- Settings → General → App Icon now offers **Ice Blue, Mint Orbit, Graphite and Portal**, plus custom images. Built-in choices stay selected after relaunch.")
 print("- Reveal the sidebar from the left edge while a video is in element fullscreen. Switching away clears the video's fullscreen state.")

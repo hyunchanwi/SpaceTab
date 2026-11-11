@@ -49,7 +49,7 @@ class MaintenanceTests(unittest.TestCase):
     def test_missing_or_unverified_engine_never_replaces_working_engine(self):
         old = {"version": "156.0.26+gabc+chromium-156.0.8078.88", "url": "old", "sha256": "a" * 64}
         new = "157.0.1+gdef+chromium-157.0.8103.39"
-        release = {"tag_name": "cef-157.0.1-codecs1", "assets": [{"name": "cef_binary_macosarm64_minimal.tar.bz2",
+        release = {"tag_name": "cef-157.0.1-codecs1", "body": f"CEF {new} for macOS", "assets": [{"name": "cef_binary_macosarm64_minimal.tar.bz2",
                     "digest": None, "browser_download_url": "https://github.com/VictorKildahl/cra/releases/download/cef-157.0.1-codecs1/cef_binary_macosarm64_minimal.tar.bz2"}]}
         self.assertEqual(maintenance.choose_engine(old, [new], [release]), old)
         release["assets"][0]["digest"] = "sha256:" + "b" * 64
@@ -66,10 +66,48 @@ class MaintenanceTests(unittest.TestCase):
         v = "156.0.26+gabc+chromium-156.0.8078.88"
         prefix = "https://github.com/VictorKildahl/cra/releases/download/"
         old = {"version": v, "url": prefix + "cef-156.0.26-codecs2/cef_binary_macosarm64_minimal.tar.bz2", "sha256": "a" * 64}
-        releases = [{"tag_name": "cef-156.0.26-codecs" + str(n), "assets": [{"name": "cef_binary_macosarm64_minimal.tar.bz2",
+        releases = [{"tag_name": "cef-156.0.26-codecs" + str(n), "body": f"CEF {v} for macOS", "assets": [{"name": "cef_binary_macosarm64_minimal.tar.bz2",
             "browser_download_url": prefix + "cef-156.0.26-codecs" + str(n) + "/cef_binary_macosarm64_minimal.tar.bz2",
             "digest": "sha256:" + "b" * 64}]} for n in [3, 10, 9]]
         self.assertIn("-codecs10/", maintenance.choose_engine(old, [v], releases)["url"])
+
+    def test_patched_chromium_version_comes_from_the_published_binary_release(self):
+        current = {"version": "156.0.26+gabc+chromium-156.0.8078.88", "url": "old", "sha256": "a" * 64}
+        stock = "156.0.27+gdef+chromium-156.0.8078.88"
+        actual = "156.0.27+gdef+chromium-156.0.8078.96"
+        releases = []
+        for codec in [1, 2]:
+            tag = f"cef-156.0.27-codecs{codec}"
+            releases.append({"tag_name": tag, "body": f"CEF {actual} for macOS", "assets": [{
+                "name": "cef_binary_macosarm64_minimal.tar.bz2",
+                "browser_download_url": f"https://github.com/VictorKildahl/cra/releases/download/{tag}/cef_binary_macosarm64_minimal.tar.bz2",
+                "digest": "sha256:" + "b" * 64,
+            }]})
+        chosen = maintenance.choose_engine(current, [stock], releases)
+        self.assertEqual(chosen["version"], actual)
+        self.assertIn("-codecs2/", chosen["url"])
+        # The stock index can still trail a patched binary on the next maintenance run.
+        installed = dict(chosen, url=releases[0]["assets"][0]["browser_download_url"])
+        self.assertEqual(maintenance.choose_engine(installed, [stock], releases), chosen)
+        # An intermediate stable patched build remains eligible after stock moves ahead.
+        newer_stock = "158.0.1+g123+chromium-158.0.8127.18"
+        self.assertEqual(maintenance.choose_engine(current, [stock, newer_stock], releases), chosen)
+
+    def test_missing_ambiguous_mismatched_and_older_binary_metadata_are_rejected(self):
+        current = {"version": "156.0.26+gabc+chromium-156.0.8078.88", "url": "old", "sha256": "a" * 64}
+        stock = "156.0.27+gdef+chromium-156.0.8078.88"
+        actual = "156.0.27+gdef+chromium-156.0.8078.96"
+        release = {"tag_name": "cef-156.0.27-codecs2", "assets": [{
+            "name": "cef_binary_macosarm64_minimal.tar.bz2",
+            "browser_download_url": "https://github.com/VictorKildahl/cra/releases/download/cef-156.0.27-codecs2/cef_binary_macosarm64_minimal.tar.bz2",
+            "digest": "sha256:" + "b" * 64,
+        }]}
+        for body in [None, "CEF version unknown", f"CEF {actual}, previous {stock}",
+                     "CEF 157.0.1+gdef+chromium-157.0.8103.39",
+                     "CEF 156.0.27+gdef+chromium-156.0.8078.80"]:
+            with self.subTest(body=body):
+                release["body"] = body
+                self.assertEqual(maintenance.choose_engine(current, [stock], [release]), current)
 
     def test_source_conflict_aborts_and_keeps_personal_changes(self):
         with tempfile.TemporaryDirectory() as temp:
