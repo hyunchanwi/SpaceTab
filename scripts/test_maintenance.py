@@ -6,6 +6,7 @@ import plistlib
 import subprocess
 import tempfile
 import unittest
+from unittest.mock import patch
 import zipfile
 
 
@@ -127,10 +128,87 @@ class MaintenanceTests(unittest.TestCase):
             (root / "file").write_text("personal change\n")
             git("commit", "-am", "personal")
             before = git("rev-parse", "HEAD")
-            with self.assertRaises(RuntimeError): maintenance.integrate(root, upstream)
+            with self.assertRaises(maintenance.UpstreamMergeConflict): maintenance.integrate(root, upstream)
             self.assertEqual(git("rev-parse", "HEAD"), before)
             self.assertEqual((root / "file").read_text(), "personal change\n")
             self.assertFalse((root / ".git/MERGE_HEAD").exists())
+
+    def test_conflicting_source_keeps_previous_upstream_and_builds_new_engine(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+
+            def git(*args):
+                return maintenance.git(root, *args).stdout.strip()
+
+            git("init", "-b", "main")
+            git("config", "user.name", "Fixture")
+            git("config", "user.email", "fixture@example.invalid")
+            (root / "behavior.swift").write_text("base\n")
+            git("add", ".")
+            git("commit", "-m", "base")
+            previous_upstream = git("rev-parse", "HEAD")
+            git("checkout", "-b", "upstream")
+            (root / "behavior.swift").write_text("upstream\n")
+            git("commit", "-am", "upstream")
+            upstream = git("rev-parse", "HEAD")
+            git("checkout", "main")
+            (root / "behavior.swift").write_text("SpaceTab\n")
+            (root / "scripts").mkdir()
+            engine = "156.0.27+gabc+chromium-156.0.8078.96"
+            (root / "scripts/fetch-cef.sh").write_text(f'CEF_VERSION="${{CEF_VERSION:-{engine}}}"\n')
+            (root / "workshop").mkdir()
+            (root / "workshop/engine.json").write_text(json.dumps({"version": engine, "url": "old", "sha256": "a" * 64}))
+            (root / "workshop/last-release.json").write_text(json.dumps({"version": "1.0.1", "upstream": previous_upstream}))
+            git("add", ".")
+            git("commit", "-m", "SpaceTab")
+            base = git("rev-parse", "HEAD")
+            version = "156.0.28+gdef+chromium-156.0.8078.100"
+            tag = "cef-156.0.28-codecs1"
+            asset_name = "cef_binary_macosarm64_minimal.tar.bz2"
+            upstream_repo = maintenance.CONFIG["upstreamRepository"]
+            distribution = maintenance.CONFIG["distributionRepository"]
+            responses = {
+                f"https://api.github.com/repos/{upstream_repo}/releases/latest": {"tag_name": "v0.1.2"},
+                f"https://api.github.com/repos/{upstream_repo}/releases?per_page=100": [{
+                    "tag_name": tag, "body": version, "assets": [{
+                        "name": asset_name, "digest": "sha256:" + "b" * 64,
+                        "browser_download_url": f"https://github.com/{upstream_repo}/releases/download/{tag}/{asset_name}",
+                    }],
+                }],
+                f"https://api.github.com/repos/{distribution}/releases/latest": {"tag_name": "v1.0.1"},
+                "https://cef-builds.spotifycdn.com/index.json": {"macosarm64": {"versions": [
+                    {"cef_version": version, "channel": "stable"},
+                ]}},
+            }
+            real_git = maintenance.git
+
+            def fixture_git(repo, *args, **kwargs):
+                if args[0] == "fetch":
+                    return real_git(repo, "fetch", ".", upstream)
+                if args[0] == "push":
+                    return real_git(repo, "branch", args[-1].split("/")[-1], "HEAD")
+                return real_git(repo, *args, **kwargs)
+
+            with patch.object(maintenance, "get_json", side_effect=responses.__getitem__), patch.object(
+                maintenance, "git", side_effect=fixture_git
+            ), patch.object(maintenance, "mac_chrome_versions", side_effect=[
+                {"versions": [{"version": "158.0.8127.18"}]},
+                {"versions": [{"version": "156.0.8078.100"}]},
+            ]):
+                plan = maintenance.prepare(root, "2", False)
+
+            self.assertTrue(plan["changed"])
+            self.assertTrue(plan["upstreamConflict"])
+            self.assertTrue(plan["engineBuildNeeded"])
+            self.assertEqual(plan["latestExtendedStableChrome"], "156.0.8078.100")
+            self.assertEqual(plan["attemptedUpstream"], upstream)
+            self.assertEqual(plan["engine"]["version"], version)
+            self.assertEqual(git("rev-parse", "HEAD^"), base)
+            self.assertEqual((root / "behavior.swift").read_text(), "SpaceTab\n")
+            record = json.loads((root / "workshop/last-release.json").read_text())
+            self.assertEqual(record["upstream"], previous_upstream)
+            self.assertEqual(record["engine"], plan["engine"])
+            self.assertEqual(git("status", "--porcelain"), "")
 
     def test_release_rejects_wrong_identity_key_feed_and_path(self):
         plan = {"version": "1.0.1", "build": "20261109010000"}

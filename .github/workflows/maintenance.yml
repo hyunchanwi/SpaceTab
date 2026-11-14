@@ -28,6 +28,9 @@ jobs:
       version: ${{ steps.plan.outputs.version }}
       build: ${{ steps.plan.outputs.build }}
       engineBuildNeeded: ${{ steps.plan.outputs.engineBuildNeeded }}
+      upstreamConflict: ${{ steps.plan.outputs.upstreamConflict }}
+      latestStableChrome: ${{ steps.plan.outputs.latestStableChrome }}
+      latestExtendedStableChrome: ${{ steps.plan.outputs.latestExtendedStableChrome }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
@@ -210,11 +213,19 @@ jobs:
           VERIFY_RESULT: ${{ needs.verify-signed.result }}
           PUBLISH_RESULT: ${{ needs.publish.result }}
           ENGINE_WAITING: ${{ needs.plan.outputs.engineBuildNeeded }}
+          UPSTREAM_CONFLICT: ${{ needs.plan.outputs.upstreamConflict }}
+          CHROME_STABLE: ${{ needs.plan.outputs.latestStableChrome }}
+          CHROME_EXTENDED: ${{ needs.plan.outputs.latestExtendedStableChrome }}
           RUN_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           ISSUE=$(gh issue list --state open --search '"Maintenance needs attention" in:title' --json number --jq '.[0].number')
-          if [ "$PLAN_RESULT" != success ] || [ "$BUILD_RESULT" = failure ] || [ "$SIGN_RESULT" = failure ] || [ "$VERIFY_RESULT" = failure ] || [ "$PUBLISH_RESULT" = failure ] || [ "$ENGINE_WAITING" = true ]; then
-            printf '%s\n' "Automated maintenance requires attention." "" "Plan: $PLAN_RESULT; build: $BUILD_RESULT; sign: $SIGN_RESULT; signed-app verification: $VERIFY_RESULT; publish: $PUBLISH_RESULT." "Engine freshness review or a newer patched binary is required: $ENGINE_WAITING." "See release.json for the shipped CEF and latest observed stable Chrome version." "" "$RUN_URL" > "$RUNNER_TEMP/attention.md"
+          if [ "$PLAN_RESULT" != success ] || [ "$BUILD_RESULT" = failure ] || [ "$SIGN_RESULT" = failure ] || [ "$VERIFY_RESULT" = failure ] || [ "$PUBLISH_RESULT" = failure ] || [ "$ENGINE_WAITING" = true ] || [ "$UPSTREAM_CONFLICT" = true ]; then
+            printf '%s\n' "Automated maintenance requires attention." "" \
+              "Plan: $PLAN_RESULT; build: $BUILD_RESULT; sign: $SIGN_RESULT; signed-app verification: $VERIFY_RESULT; publish: $PUBLISH_RESULT." \
+              "Cra source merge needs review: ${UPSTREAM_CONFLICT:-unknown}." \
+              "Engine freshness review or a newer patched binary is required: ${ENGINE_WAITING:-unknown}." \
+              "Observed macOS Chrome versions: Stable ${CHROME_STABLE:-unavailable}, Extended Stable ${CHROME_EXTENDED:-unavailable}." \
+              "See release.json for the shipped CEF." "" "$RUN_URL" > "$RUNNER_TEMP/attention.md"
             if [ -n "$ISSUE" ]; then gh issue edit "$ISSUE" --body-file "$RUNNER_TEMP/attention.md"; else gh issue create --title 'Maintenance needs attention' --body-file "$RUNNER_TEMP/attention.md"; fi
           elif [ -n "$ISSUE" ]; then
             gh issue close "$ISSUE"

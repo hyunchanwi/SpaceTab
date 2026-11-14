@@ -26,10 +26,14 @@ and feeds. Signing imports the persistent identity only after bounded ZIP valida
 extraction and native-binary inspection. External tools do not inherit Actions credentials.
 Release entitlements retain CEF's JIT requirements but disable DYLD environment injection.
 
-Engine freshness is checked against both stable CEF availability and Google's macOS stable
-Chrome version history. `release.json` includes `latestStableChrome` when available. A lag
-or failed freshness lookup raises maintenance attention; it does not silently substitute a
-stock, incompatible engine or block an otherwise tested application security fix.
+Engine freshness is checked against stable CEF availability and Google's macOS Chrome
+Stable and Extended Stable version history. `release.json` records both Chrome versions
+when available. A lag or failed lookup raises maintenance attention.
+
+When a Cra source merge conflicts, the planner aborts the merge and confirms the source
+tree is clean. It can still check and build a compatible engine against the existing
+SpaceTab source. The full build, signing and verification checks apply to that candidate.
+The conflict remains visible in the maintenance issue and release metadata.
 
 ## Release events
 

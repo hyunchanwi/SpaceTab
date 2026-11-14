@@ -143,7 +143,9 @@ def write_feed(archive, plan, info, signature):
     for key, value in [("version", plan["build"]), ("shortVersionString", plan["version"]),
                        ("minimumSystemVersion", info["LSMinimumSystemVersion"])]:
         ET.SubElement(item, "{" + SPARKLE + "}" + key).text = value
-    notes = "Tested browser and Chromium/CEF maintenance update."
+    notes = "Tested SpaceTab maintenance update."
+    if engine := plan.get("engine"):
+        notes += f" Bundled CEF: {engine['version']}."
     status = json.loads((archive.parent / "signing-status.json").read_text())
     if status["mode"] == "persistent-personal":
         notes += " Uses the same personal application signing identity across versions. Not Apple notarized. The first transition from an ad-hoc build may need Keychain approval."
@@ -192,6 +194,8 @@ def main():
     (args.archive.parent / "SHA256SUMS.txt").write_text("".join(digest + "  " + name + "\n" for name in names))
     public = {k: plan[k] for k in ["version", "build", "engine", "latestStableEngine", "engineBuildNeeded"]}
     public["latestStableChrome"] = plan.get("latestStableChrome")
+    public["latestExtendedStableChrome"] = plan.get("latestExtendedStableChrome")
+    public["upstreamConflict"] = plan.get("upstreamConflict", False)
     public["signing"] = status
     (args.archive.parent / "release.json").write_text(json.dumps(public, indent=2) + "\n")
     print("Validated update archive and signed update feed.")

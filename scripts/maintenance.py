@@ -16,6 +16,10 @@ ROOT = Path(__file__).resolve().parents[1]
 CONFIG = json.loads((ROOT / "config.json").read_text())
 
 
+class UpstreamMergeConflict(RuntimeError):
+    pass
+
+
 def get_json(url):
     headers = {"User-Agent": "Arc-Workshop-Maintenance", "Accept": "application/json"}
     if url.startswith("https://api.github.com/") and os.environ.get("GH_TOKEN"):
@@ -31,14 +35,26 @@ def version(value):
     return tuple(map(int, value.split(".")))
 
 
+def latest_chrome_version(response):
+    candidates = [row.get("version", "") for row in response.get("versions", [])
+                  if isinstance(row, dict) and re.fullmatch(r"[0-9]+(?:\.[0-9]+){3}", row.get("version", ""))]
+    return max(candidates, key=version) if candidates else None
+
+
 def engine_freshness(engine, latest_cef, chrome_response):
     """CEF can lag Chrome even when our patched CEF is the latest available binary."""
-    candidates = [row.get("version", "") for row in chrome_response.get("versions", [])
-                  if isinstance(row, dict) and re.fullmatch(r"[0-9]+(?:\.[0-9]+){3}", row.get("version", ""))]
-    latest_chrome = max(candidates, key=version) if candidates else None
+    latest_chrome = latest_chrome_version(chrome_response)
     chromium = engine.split("+chromium-", 1)[1]
     waiting = version(latest_cef) > version(engine) or latest_chrome is None or version(latest_chrome) > version(chromium)
     return latest_chrome, waiting
+
+
+def mac_chrome_versions(channel):
+    try:
+        return get_json(f"https://versionhistory.googleapis.com/v1/chrome/platforms/mac/channels/{channel}/versions?pageSize=3")
+    except (urllib.error.URLError, TimeoutError, ValueError):
+        # Report the unavailable comparison without blocking an otherwise tested fix.
+        return {}
 
 
 def git(root, *args, allow_failure=False):
@@ -88,8 +104,12 @@ def integrate(root, upstream_sha):
         return False
     result = git(root, "merge", "--no-commit", "--no-ff", upstream_sha, allow_failure=True)
     if result.returncode:
-        git(root, "merge", "--abort", allow_failure=True)
-        raise RuntimeError("Upstream conflicts with personal changes; maintenance needs attention")
+        if not git(root, "ls-files", "--unmerged").stdout:
+            raise RuntimeError("Upstream merge failed before resolving source changes")
+        git(root, "merge", "--abort")
+        if git(root, "status", "--porcelain").stdout:
+            raise RuntimeError("Aborted upstream merge left source changes")
+        raise UpstreamMergeConflict("Upstream conflicts with personal changes")
     return True
 
 
@@ -120,7 +140,21 @@ def prepare(root, run, force):
         raise ValueError("Unexpected upstream release tag")
     git(root, "fetch", f"https://github.com/{repo}.git", f"refs/tags/{tag}")
     upstream = git(root, "rev-parse", "FETCH_HEAD^{commit}").stdout.strip()
-    merged = integrate(root, upstream)
+    upstream_conflict = False
+    try:
+        merged = integrate(root, upstream)
+    except UpstreamMergeConflict:
+        # A compatible engine can still be tested against the current SpaceTab source.
+        # Keep the attempted upstream commit separate from the source actually shipped.
+        upstream_conflict = True
+        merged = False
+        previous_record = json.loads((root / "workshop/last-release.json").read_text())
+        upstream, attempted_upstream = previous_record["upstream"], upstream
+        if not re.fullmatch(r"[a-f0-9]{40}", upstream) or git(
+            root, "merge-base", "--is-ancestor", upstream, base, allow_failure=True
+        ).returncode:
+            raise RuntimeError("Last integrated upstream commit could not be verified")
+        print("Upstream source conflicts; continuing with the engine check on the current source.")
     current = json.loads((root / "workshop/engine.json").read_text())
     script = (root / "scripts/fetch-cef.sh").read_text()
     match = re.search(r'^CEF_VERSION="\$\{CEF_VERSION:-([^}]+)\}"', script, re.M)
@@ -130,12 +164,10 @@ def prepare(root, run, force):
     latest = max(stable, key=version)
     releases = get_json(f"https://api.github.com/repos/{repo}/releases?per_page=100")
     engine = choose_engine(current, [match[1], *stable], releases)
-    try:
-        chrome = get_json("https://versionhistory.googleapis.com/v1/chrome/platforms/mac/channels/stable/versions?pageSize=3")
-    except (urllib.error.URLError, TimeoutError, ValueError):
-        # An unavailable version service must not block a security fix or claim freshness.
-        chrome = {}
-    latest_chrome, waiting = engine_freshness(engine["version"], latest, chrome)
+    latest_chrome, waiting = engine_freshness(engine["version"], latest, mac_chrome_versions("stable"))
+    extended_chrome = latest_chrome_version(mac_chrome_versions("extended"))
+    engine_chromium = engine["version"].split("+chromium-", 1)[1]
+    waiting = waiting or extended_chrome is None or version(extended_chrome) > version(engine_chromium)
     (root / "workshop/engine.json").write_text(json.dumps(engine, indent=2) + "\n")
     git(root, "add", "workshop/engine.json")
     fingerprint = source_fingerprint(root)
@@ -151,13 +183,15 @@ def prepare(root, run, force):
                                     + (ROOT / "scripts/codesign_app.py").read_bytes()).hexdigest()
     unpublished = not published or published != "v" + previous.get("version", "")
     changed = merged or engine != current or unpublished or fingerprint != previous.get("sourceFingerprint") or signing_policy != previous.get("signingPolicy")
-    plan = {"changed": changed or force, "base": base, "upstream": upstream,
+    plan = {"changed": changed or force, "base": base, "upstream": upstream, "upstreamConflict": upstream_conflict,
             "engine": engine, "latestStableEngine": latest, "engineBuildNeeded": waiting,
-            "latestStableChrome": latest_chrome,
+            "latestStableChrome": latest_chrome, "latestExtendedStableChrome": extended_chrome,
             "sourceFingerprint": fingerprint,
             "signingPolicy": signing_policy,
             "version": "1.0." + run, "build": datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%d%H%M%S"),
             "branch": "maintenance/candidate-" + run}
+    if upstream_conflict:
+        plan["attemptedUpstream"] = attempted_upstream
     if plan["changed"]:
         (root / "workshop/engine.json").write_text(json.dumps(engine, indent=2) + "\n")
         state = {k: plan[k] for k in ["upstream", "engine", "version", "build", "sourceFingerprint", "signingPolicy"]}
@@ -180,8 +214,10 @@ def main():
     args.output.write_text(json.dumps(plan, indent=2) + "\n")
     if os.environ.get("GITHUB_OUTPUT"):
         with open(os.environ["GITHUB_OUTPUT"], "a") as stream:
-            for key in ["changed", "base", "candidate", "branch", "version", "build", "engineBuildNeeded"]:
+            for key in ["changed", "base", "candidate", "branch", "version", "build", "engineBuildNeeded", "upstreamConflict"]:
                 stream.write(f"{key}={str(plan.get(key, '')).lower() if isinstance(plan.get(key), bool) else plan.get(key, '')}\n")
+            for key in ["latestStableChrome", "latestExtendedStableChrome"]:
+                stream.write(f"{key}={plan[key] or ''}\n")
     print("Maintenance plan prepared; source content remains private.")
 
 

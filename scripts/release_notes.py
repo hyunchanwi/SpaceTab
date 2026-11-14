@@ -12,7 +12,8 @@ print("A native macOS browser built around spaces, a quiet sidebar and shared fa
 print("### Install\n")
 print("Download **SpaceTab.zip**, unzip it, and move **SpaceTab.app** to Applications. Apple silicon; macOS 14 or later.\n")
 print("### In this release\n")
-print("- Engine maintenance now uses the version published with the patched CEF package, fixing an archive folder mismatch that blocked automatic builds.")
+if plan.get("upstreamConflict"):
+    print("- The engine was checked and built against the existing SpaceTab source. New Cra source changes need a separate merge review.")
 print("- A new **Ice Blue** icon is the default for SpaceTab, including Finder and notification helpers.")
 print("- Settings → General → App Icon now offers **Ice Blue, Mint Orbit, Graphite and Portal**, plus custom images. Built-in choices stay selected after relaunch.")
 print("- Reveal the sidebar from the left edge while a video is in element fullscreen. Switching away clears the video's fullscreen state.")
@@ -31,10 +32,9 @@ if signing["mode"] == "persistent-personal":
 else:
     print("- Signed with Developer ID and notarized by Apple.")
 if plan.get("engineBuildNeeded"):
-    if plan.get("latestStableChrome"):
-        print(f"- Engine freshness needs attention: Chrome stable reports `{plan['latestStableChrome']}`; this release keeps the tested, compatible patched engine shown above.")
-    else:
-        print("- Engine freshness could not be confirmed; this release keeps the tested, compatible patched engine shown above.")
+    stable = plan.get("latestStableChrome") or "unavailable"
+    extended = plan.get("latestExtendedStableChrome") or "unavailable"
+    print(f"- Engine freshness needs attention. Google reports macOS Chrome Stable `{stable}` and Extended Stable `{extended}`. The bundled Chromium version is listed above.")
 print("\n### Update and recovery\n")
 print("Installed copies check for signed updates. Installation requires your action by default. Before updating, the app saves the previous app and browsing profile locally; recovery is manual.\n")
 print("[Getting started](https://github.com/hyunchanwi/SpaceTab#install) · [한국어 안내](https://github.com/hyunchanwi/SpaceTab/blob/main/README.ko.md) · [Report a bug](https://github.com/hyunchanwi/SpaceTab/issues/new/choose)\n")
